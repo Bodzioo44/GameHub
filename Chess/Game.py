@@ -5,7 +5,7 @@ from Chess.Board import Board
 import threading
 from time import sleep
 
-class Chess_Game:
+class Game:
     def __init__(self, board_size, mode = 8):
         self.board_size = board_size
         self.mode = mode

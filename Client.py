@@ -5,6 +5,11 @@ import sys
 #from time import sleep
 #from Assets.constants import API
 
+from Checkers.Game import Game as Checkers_Game
+from Chess.Game import Game as Chess_Game
+from Assets.constants import Color
+import threading
+
 #TODO pass game object into client, and calling its update method every time we receive data...
 class Client:
     def __init__(self, name: str, server: str, port:int = 4444):
@@ -15,6 +20,7 @@ class Client:
         self.format = "utf-8"
         self.buff_size = 4096
         self.name = name
+        self.game = None
         #self.disconnect_message = {"Disconnect":self.name}
 
     def Connect(self):
@@ -26,6 +32,7 @@ class Client:
         self.Send({"Connect":self.name})
 
     def Send(self, message: dict):
+        print(f"Sent: {message}")
         message = json.dumps(message)
         #print(f"Sending: {message}")
         self.sock.send(message.encode(self.format))
@@ -33,23 +40,44 @@ class Client:
     def Disconnect(self):
         self.sock.close()
         self.sock = None
+        
+        
+    def Pick_Game_Type(self, type):
+        match type:
+            case "Chess_4":
+                return Chess_Game(4)
+            case "Checkers_2":
+                return Checkers_Game(800)
+            case "Chess_2":
+                return Chess_Game(2)
 
     def Receive(self):
         message = self.sock.recv(self.buff_size).decode(self.format)
         if message:
             message = json.loads(message)
+            print(f"Received: {message}")
             return message
         else:
             raise socket.error("Received empty message")
 
     def Message_Handler(self, message):
         for api_id, data in message.items():
+            print(f"Received: {api_id}:{data}")
             match api_id:
                 case "Game_Update":
-                    pass
+                    if self.game:
+                        self.game.Receive_Update(data)
+                    else:
+                        print("we shouldnt be here, but idk")
                 
+                #data = lobby_type, player_color
                 case "Start_Lobby":
-                    pass
+                    print("we got here?")
+                    lobby_type, player_color = data
+                    player_color = Color(tuple(player_color))
+                    self.game = self.Pick_Game_Type(lobby_type)
+                    self.game.Assign_Online_Players(player_color, self)
+                    self.game_thread = threading.Thread(target = lambda: self.game.Start()).start()
                 
                 case "Request_Lobbies":
                     for key, value in data.items():
@@ -61,7 +89,12 @@ class Client:
                     self.Send(return_message)
 
                 case "Message":
-                    print(data)
+                    if type(data) == list:
+                        for message in data:
+                            print(message)
+                    else:
+                        print(data)
+                        
                 case "Disconnect":
                     print(data)
                     self.Disconnect()
@@ -85,6 +118,7 @@ class Client:
             print("Disconnected from the server.")
         except KeyboardInterrupt:
             self.Disconnect()
+            self.game.Kill()
             print("Keyboard Interrupt")
             
 

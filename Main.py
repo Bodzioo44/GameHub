@@ -1,5 +1,36 @@
 from Checkers.Game import Game as Checkers_Game
 from Chess.Game import Game as Chess_Game
+from Client import Client
+from Assets.constants import Color
+
+
+
+
+def main():
+    Game = Checkers_Game(Color.WHITE, 800, 4, 4)
+    Game_Client = Client("Bodzioo", "127.0.0.1", 4444)
+    Game.Assign_Online_Players(Color.WHITE, Game_Client)
+    Game_Client.Assign_Game(Game)
+    #we are starting the actuall game assuming that all players are ready and connected
+    Game.Start()
+    
+
+
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
 """
 from Client import Client
 import threading
@@ -44,7 +75,7 @@ def main():
 
 
 #Game with 2 bots with complexity of 6 (Bot vs Bot)
-Game = Checkers_Game(800, 4, 4)
+#Game = Checkers_Game(800, 4, 4)
 
 #Game with black bot with complexity of 5 (Player vs Bot)
 #Game = Checkers_Game(800, 5)
@@ -54,11 +85,3 @@ Game = Checkers_Game(800, 4, 4)
 
 #Game with 2 players (Player vs Player)
 #Game = Checkers_Game(800)
-
-try:
-    Game.Start()
-except Exception as error:
-    print(error)
-    print("If the error is thread related try python 3.11")
-    print("I couldn't get it consistently working on python 3.12, I read somewhere that threading lib is broken on python 3.12")
-    

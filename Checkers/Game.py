@@ -11,16 +11,18 @@ from Checkers.Board import Board
 from Checkers.Bot import Bot
 
 import threading
+import json
 from time import sleep
 #import asyncio
 
+
+#some better way of assigning players (online) is needed
 class Game:
-    def __init__(self, board_pixel_size: int, black_bot: int = 0, white_bot: int = 0):
+    def __init__(self, board_pixel_size: int):
         self.board_pixel_size = board_pixel_size
         self.square_size = self.board_pixel_size//8
         
-        self.player1 = black_bot
-        self.player2 = white_bot
+
         self.bot_ready = True
         
         self.running = True
@@ -34,6 +36,42 @@ class Game:
         
         self.Board = Board(board_pixel_size)
 
+
+    def Assign_Online_Players(self, color, client):
+        self.client = client
+        self.player_color = color
+        self.player1 = None
+        self.player2 = None
+    
+    def Assign_Offline_Players(self, player1, player2):
+        self.player1 = player1
+        self.player2 = player2
+
+            
+        
+    def Receive_Update(self, data):
+        #data = {(old_position, new_position):(pieces to nuke)}
+        #data = 
+        for key, value in data.items():
+            old_position, new_position = json.loads(key)
+            pieces_to_nuke = value
+            for piece in pieces_to_nuke:
+                self.Board.Remove(piece)
+            row, col = old_position
+            piece = self.Board.Grab_Tile(row, col)
+            self.Board.Move(piece, new_position)
+        self.Change_Turn()
+        self.UpdateBoard()
+            
+    def Send_Update(self):
+        old_position = self.Board.last_moved_piece_position_before
+        new_position = self.Board.last_moved_piece_position_after
+        removed_pieces = self.Board.Get_Removed_Pieces()
+        message = {json.dumps((old_position, new_position)):removed_pieces}
+        self.client.Send({"Game_Update":message})
+
+
+
     def Start(self):
         self.window = pygame.display.set_mode((self.board_pixel_size, self.board_pixel_size))
         pygame.init()
@@ -43,20 +81,114 @@ class Game:
         
         self.UpdateBoard()
         self.main()
+
+
+    def main(self):
         
-    def get_mouse_position(self, pos):
-        x, y = pos
-        return y//(self.board_pixel_size//8), x//(self.board_pixel_size//8)
-    
+        if self.player1 == "Bot":
+            Bot1 = Bot(self.Board, Color.BLACK, 6)#, 0.8574026971964815)
+        if self.player2 == "Bot":
+            Bot2 = Bot(self.Board, Color.WHITE, 6)#, 0.8574026971964815)
+        clock = pygame.time.Clock()
+        
+        while self.running:
+            clock.tick(60)
+            
+            #winner check and displaying bot seeds
+            winner = self.Board.CheckForWinner(True)
+            if winner and self.turn:
+                print(f"{winner.name} has won the game!")
+                self.turn = None
+                if self.player1 == "Bot":
+                    print(f"{Color.BLACK.name} Bot random seed: {Bot1.seed}")
+                if self.player2 == "Bot":
+                    print(f"{Color.WHITE.name} Bot random seed: {Bot2.seed}")
+            
+            #Bot calculations are done in separate thread, otherwise main pygame window is laggy
+            #Bot actions
+            if self.turn == Color.BLACK and self.player1 == "Bot" and self.bot_ready:
+                Bot_thread1 = threading.Thread(target = lambda: self.BotMove(Bot1))
+                #Bot_thread1.setDaemon(True)
+                Bot_thread1.start()
+                self.bot_ready = False
+
+            elif self.turn == Color.WHITE and self.player2 == "Bot" and self.bot_ready:
+                Bot_thread2 = threading.Thread(target = lambda: self.BotMove(Bot2))
+                #Bot_thread2.setDaemon(True)
+                Bot_thread2.start()
+                self.bot_ready = False
+
+            else:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_p:
+                            self.Board.Print_Board()
+                        elif event.key == pygame.K_d:
+                            if self.debugg:
+                                self.debugg = False
+                            else:
+                                self.debugg = True
+                            self.UpdateBoard()
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            #if the game keeps going (self.turn != None)
+                            if self.turn:
+                                pos = self.get_mouse_position(pygame.mouse.get_pos())
+                                #if both players are bots do nothing
+                                if self.player1 == "Bot" and self.player2 == "Bot":
+                                    print("Let the bots play!")
+                                else:
+                                    #
+                                    if self.turn == self.player_color:
+                                        self.Select(pos)
+                                    else:
+                                        print("Wait for your turn!")
+                                        
+                            #if the game is over (self.turn = None)
+                            else:
+                                print(f"Game has ended! {winner.name} has won!")
+                                
+        #joining bots threads
+        if self.player1 == "Bot":
+            print(f"Waiting for {Bot1} to finish...")
+            Bot_thread1.join()
+        if self.player2 == "Bot":
+            print(f"Waiting for {Bot2} to finish...")
+            Bot_thread2.join()
+        pygame.quit()
+        
+        print("Game closed")
+
+    def BotMove(self, Bot):
+        #optional timer thread so bot moves always last same amount of time
+        if self.timer:
+            timer_thread = threading.Thread(target = sleep, args = (self.timer,))
+            timer_thread.start()
+        new_board = Bot.GetBotMove(self.Board)
+        if new_board:
+            self.Board = new_board
+            self.Change_Turn()
+            self.UpdateBoard()
+        else:
+            print(f"{Bot.main_color} can't move, {Bot.secondary_color} wins!")
+            self.turn = None
+        if self.timer:
+            timer_thread.join()
+        self.bot_ready = True
+
     def Change_Turn(self):
+        if self.turn == self.player_color:
+            self.Send_Update()
         if self.turn == Color.WHITE:
             self.turn = Color.BLACK
         else:
             self.turn = Color.WHITE
         #To avoid spam in bot vs bot
-        if not self.player1 and not self.player2:
+        if not self.player1 == "Bot" and not self.player2 == "Bot":
             print("Turn change!")
-        
+
     def Select(self, pos):
         if self.commited:
             self.Commit(pos)
@@ -137,87 +269,15 @@ class Game:
                     self.Change_Turn()
         else:
             print("Select correct tile")
-
-    def BotMove(self, Bot):
-        #optional timer thread so bot moves always last same amount of time
-        if self.timer:
-            timer_thread = threading.Thread(target = sleep, args = (self.timer,))
-            timer_thread.start()
-        new_board = Bot.GetBotMove(self.Board)
-        if new_board:
-            self.Board = new_board
-            self.Change_Turn()
-            self.UpdateBoard()
-        else:
-            print(f"{Bot.main_color} can't move, {Bot.secondary_color} wins!")
-            self.turn = None
-        if self.timer:
-            timer_thread.join()
-        self.bot_ready = True
-
-    def main(self):
-        if self.player1:
-            Bot1 = Bot(self.Board, Color.BLACK, self.player1)#, 0.8574026971964815)
-        if self.player2:
-            Bot2 = Bot(self.Board, Color.WHITE, self.player2)#, 0.8574026971964815)
-        clock = pygame.time.Clock()
-        
-        while self.running:
-            clock.tick(60)
-            winner = self.Board.CheckForWinner(True)
-            if winner and self.turn:
-                print(f"{winner.name} has won the game!")
-                self.turn = None
-                if self.player1:
-                    print(f"{Color.BLACK.name} Bot random seed: {Bot1.seed}")
-                if self.player2:
-                    print(f"{Color.WHITE.name} Bot random seed: {Bot2.seed}")
             
-            #Bot calculations are done in separate thread, otherwise main pygame window is laggy
-            if self.turn == Color.BLACK and self.player1 and self.bot_ready:
-                Bot_thread1 = threading.Thread(target = lambda: self.BotMove(Bot1))
-                #Bot_thread1.setDaemon(True)
-                Bot_thread1.start()
-                self.bot_ready = False
+    def get_mouse_position(self, pos):
+        x, y = pos
+        return y//(self.board_pixel_size//8), x//(self.board_pixel_size//8)
+    
+    def Kill(self):
+        self.running = False
+    
 
-            elif self.turn == Color.WHITE and self.player2 and self.bot_ready:
-                Bot_thread2 = threading.Thread(target = lambda: self.BotMove(Bot2))
-                #Bot_thread2.setDaemon(True)
-                Bot_thread2.start()
-                self.bot_ready = False
-
-            else:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        self.running = False
-                    elif event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_p:
-                            self.Board.Print_Board()
-                        elif event.key == pygame.K_d:
-                            if self.debugg:
-                                self.debugg = False
-                            else:
-                                self.debugg = True
-                            self.UpdateBoard()
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
-                        if event.button == 1:
-                            if self.turn:
-                                pos = self.get_mouse_position(pygame.mouse.get_pos())
-                                if self.player1 and self.player2:
-                                    print("Let the bots play!")
-                                else:
-                                    self.Select(pos)
-                            else:
-                                print("Game has ended!")
-                                
-        if self.player1:
-            print(f"Waiting for {Bot1} to finish...")
-            Bot_thread1.join()
-        if self.player2:
-            print(f"Waiting for {Bot2} to finish...")
-            Bot_thread2.join()
-        pygame.quit()
-        print("Game closed")
 
     """
     PYGAME DRAWING STUFF

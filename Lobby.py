@@ -1,3 +1,5 @@
+from Assets.constants import Color
+
 
 class Lobby:
     def __init__(self, type:str, size:int, id:int, player):
@@ -5,9 +7,11 @@ class Lobby:
         self.size = size
         self.live = False
         self.id = id
+        self.colors = {}
         
         self.players = [player]
         self.player_count = 1
+        self.Assign_Color(player)
         self.host = player
         player.Join_Lobby(self)
 
@@ -39,6 +43,7 @@ class Lobby:
         else:
             self.player_count += 1
             self.players.append(player)
+            self.Assign_Color(player)
             player.Join_Lobby(self)
             return "Joined the lobby"
 
@@ -51,10 +56,11 @@ class Lobby:
         else:
             return "Lobby is not filled"
         
-
+    #cant leave while game is on? idk
     def Remove_Player(self, player):
         #print(f"{player.name} has left the lobby")
         self.players.remove(player)
+        del self.colors[player]
         if player == self.host and self.players:
             self.host = self.players[0]
         player.Leave_Lobby()
@@ -68,9 +74,13 @@ class Lobby:
                 players_to_send.append(player)
         return players_to_send
     
-    def Game_Update(self, current_player):
-        #idk
-        pass
+    def Assign_Color(self, player):
+        taken_colors = self.colors.values()
+        for color in Color:
+            if color not in taken_colors:
+                self.colors.update({player:color})
+                break
+    
     
 
     #does lobby needs to do anything with disconnected player? should sending info about disconnecting be here?

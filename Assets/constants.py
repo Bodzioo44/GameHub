@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Color(Enum):
+class Color(tuple, Enum):
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
     ORANGE = (255, 106, 0)
@@ -14,6 +14,18 @@ class Game_Type(Enum):
     Checkers_2 = 2
     Chess_2 = 2
     #maybe?
+
+def Dict_Merger(dict_list):
+    dict3 = {}
+    for dict in dict_list:
+        for key, value in dict.items():
+            if key in dict3.keys():
+                old_value = dict3[key]
+                dict3.update({key:[old_value, value]})
+            else:
+                dict3.update({key:value})
+    return dict3
+
 
 #maybe use flask or django? idk later on
 #from flask import Flask, jsonify

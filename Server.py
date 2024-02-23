@@ -8,6 +8,7 @@ import platform
 from Player import Player
 from Lobby import Lobby
 from time import strftime, localtime
+from Assets.constants import Dict_Merger
 
 class Server:
     def __init__(self, ip: str, port:int = 4444):
@@ -46,6 +47,7 @@ class Server:
         print(f"Starting server at {self.ip}:{self.port}")
         self.sock.bind(self.addr) 
         self.Listen_For_Connections()
+    
         
     def Disconnect(self, sock):
         player = self.player_list[sock]
@@ -80,7 +82,7 @@ class Server:
                     if lobby and lobby.live:
                         players_to_send = lobby.Other_Players(player)
                         for player in players_to_send:
-                            self.Send(player.sock, data)
+                            self.Send(player.sock, {"Game_Update":data})
                     else:
                         return_message = {"Message":"Join or start a lobby first"}
                         self.Send(sock, return_message)
@@ -134,7 +136,10 @@ class Server:
                         return_message = {"Message":lobby.Start(player)}
                         if lobby.live:
                             for player in lobby.players:
-                                self.Send(player.sock, return_message)
+                                #completly clear and understandable
+                                dict_list = [return_message, {"Start_Lobby":(lobby.type, lobby.colors[player])}, {"Message":f"Started the {lobby.type} as {lobby.colors[player]}"}]
+                                #print(dict_list)
+                                self.Send(player.sock, Dict_Merger(dict_list))
                         else:
                             self.Send(sock, return_message)
                     else:

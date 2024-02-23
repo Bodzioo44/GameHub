@@ -6,6 +6,11 @@ class Board:
     def __init__(self, board_pixel_size, extra_row = True):
         self.square_size = board_pixel_size//8
         self.board = self.create_board(extra_row)
+        
+        #for online moves
+        self.last_moved_piece_position_before = None
+        self.last_moved_piece_position_after = None
+        self.last_removed_pieces_positions = []
 
     def __repr__(self):
         return f"Board with eval of {self.Evaluate(Color.BLACK)} in favor of {Color.BLACK.name}"
@@ -32,6 +37,11 @@ class Board:
     def Move(self, piece, pos):
         row, col = pos
         Prow, Pcol = piece.position()
+        
+        #for online moves
+        self.last_moved_piece_position_after = pos
+        self.last_moved_piece_position_before = Prow, Pcol
+        
         self.board[Prow][Pcol] = "0"
         if row == 0 and piece.color == Color.WHITE and piece.name() == "Peon":
             self.board[row][col] = Queen(row, col, Color.WHITE, self.square_size)
@@ -123,9 +133,16 @@ class Board:
 
     def Grab_Tile(self, row , col):
         return self.board[row][col]
+    
+    #for online moves
+    def Get_Removed_Pieces(self):
+        result = self.last_removed_pieces_positions
+        self.last_removed_pieces_positions = []
+        return result
 
     def Remove(self, piece):
         row, col = piece.position()
+        self.last_removed_pieces_positions.append((row, col))
         self.board[row][col] = "0"
 
     def CheckForWinner(self, check: bool = False):
