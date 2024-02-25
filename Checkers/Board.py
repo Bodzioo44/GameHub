@@ -2,12 +2,16 @@ from Assets.constants import Color
 from Checkers.Piece import Peon, Queen
 from numpy import sign
 
+
+#TODO maybe add piece count for easier winner check?
+#TODO move Get_All_Moves from Bot to here for easier winner check?
 class Board:
     def __init__(self, board_pixel_size, extra_row = True):
         self.square_size = board_pixel_size//8
         self.board = self.create_board(extra_row)
         
-        #for online moves
+        #for online moves, imo there is no better way to do it
+        #maybe add online mode check?
         self.last_moved_piece_position_before = None
         self.last_moved_piece_position_after = None
         self.last_removed_pieces_positions = []
@@ -134,16 +138,28 @@ class Board:
     def Grab_Tile(self, row , col):
         return self.board[row][col]
     
-    #for online moves
-    def Get_Removed_Pieces(self):
-        result = self.last_removed_pieces_positions
-        self.last_removed_pieces_positions = []
-        return result
+
 
     def Remove(self, piece):
+        
         row, col = piece.position()
-        self.last_removed_pieces_positions.append((row, col))
         self.board[row][col] = "0"
+        
+        #for online moves
+        self.last_removed_pieces_positions.append((row, col))
+     
+    def Remove_by_position(self, row, col):
+        self.board[row][col] = "0"
+        #self.last_removed_pieces_positions.append((row, col))
+    
+    #for online moves
+    def Get_Removed_Pieces(self):
+        print(f"List inside board {self.last_removed_pieces_positions}")
+        result = self.last_removed_pieces_positions
+        self.last_removed_pieces_positions = []
+        print(f"List inside board {self.last_removed_pieces_positions}")
+        print(f"Result: {result}")
+        return result
 
     def CheckForWinner(self, check: bool = False):
         #piece count check

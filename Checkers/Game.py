@@ -21,8 +21,6 @@ class Game:
     def __init__(self, board_pixel_size: int):
         self.board_pixel_size = board_pixel_size
         self.square_size = self.board_pixel_size//8
-        
-
         self.bot_ready = True
         
         self.running = True
@@ -37,38 +35,58 @@ class Game:
         self.Board = Board(board_pixel_size)
 
 
-    def Assign_Online_Players(self, color, client):
+    def Assign_Online_Players(self, color: Color, client):
         self.client = client
         self.player_color = color
         self.player1 = None
         self.player2 = None
     
-    def Assign_Offline_Players(self, player1, player2):
+    #player1, player2 - 0 for human player, positive int for bot complexity
+    def Assign_Offline_Players(self, player1: int = 6, player2: int = 6):
         self.player1 = player1
         self.player2 = player2
 
-            
-        
     def Receive_Update(self, data):
         #data = {(old_position, new_position):(pieces to nuke)}
         #data = 
         for key, value in data.items():
-            old_position, new_position = json.loads(key)
-            pieces_to_nuke = value
-            for piece in pieces_to_nuke:
-                self.Board.Remove(piece)
-            row, col = old_position
-            piece = self.Board.Grab_Tile(row, col)
-            self.Board.Move(piece, new_position)
+            match key:
+                case "Position":
+                    row, col = value[0]
+                    piece = self.Board.Grab_Tile(row, col)
+                    self.Board.Move(piece, value[1])
+                case "Removed":
+                    for pos in value:
+                        row, col = pos
+                        self.Board.Remove_by_position(row, col)
+                case _:
+                    print(f"Invalid API inside Game_Update: {key}")
+                    
+                    
+
+            #old_position, new_position = json.loads(key)
+            #pieces_to_nuke = value
+            #for piece in pieces_to_nuke:
+            #    self.Board.Remove(piece)
+            #row, col = old_position
+            #piece = self.Board.Grab_Tile(row, col)
+            #self.Board.Move(piece, new_position)
         self.Change_Turn()
         self.UpdateBoard()
-            
+
     def Send_Update(self):
         old_position = self.Board.last_moved_piece_position_before
         new_position = self.Board.last_moved_piece_position_after
+        #print(f"Removed pieces inside game: {removed_pieces}")
         removed_pieces = self.Board.Get_Removed_Pieces()
+        print(f"Removed pieces inside game: {removed_pieces}")
+        a = {"Position": (old_position, new_position), "Removed": removed_pieces}
+        print(f"A: {a}")
+        
+        
+        new_message = {"Game_Update":a}
         message = {json.dumps((old_position, new_position)):removed_pieces}
-        self.client.Send({"Game_Update":message})
+        self.client.Send({"Game_Update":a})
 
 
 

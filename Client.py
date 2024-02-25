@@ -21,7 +21,6 @@ class Client:
         self.buff_size = 4096
         self.name = name
         self.game = None
-        #self.disconnect_message = {"Disconnect":self.name}
 
     def Connect(self):
         print(f"Connecting to: {self.server}:{self.port}")
@@ -62,7 +61,7 @@ class Client:
 
     def Message_Handler(self, message):
         for api_id, data in message.items():
-            print(f"Received: {api_id}:{data}")
+            #print(f"Received: {api_id}:{data}")
             match api_id:
                 case "Game_Update":
                     if self.game:
@@ -120,7 +119,6 @@ class Client:
             self.Disconnect()
             self.game.Kill()
             print("Keyboard Interrupt")
-            
 
 def Test(Client:Client):
     while True:
@@ -140,7 +138,6 @@ def Test(Client:Client):
             case "f":
                 Client.Send({"Game_Update": {"Hello":"This would be game data to update OwO"}})
                 
-
 
 
 if __name__ == '__main__':
