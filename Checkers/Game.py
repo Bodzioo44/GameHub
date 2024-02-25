@@ -54,39 +54,26 @@ class Game:
                 case "Position":
                     row, col = value[0]
                     piece = self.Board.Grab_Tile(row, col)
+                    print(piece)
                     self.Board.Move(piece, value[1])
                 case "Removed":
                     for pos in value:
                         row, col = pos
                         self.Board.Remove_by_position(row, col)
                 case _:
-                    print(f"Invalid API inside Game_Update: {key}")
-                    
-                    
-
-            #old_position, new_position = json.loads(key)
-            #pieces_to_nuke = value
-            #for piece in pieces_to_nuke:
-            #    self.Board.Remove(piece)
-            #row, col = old_position
-            #piece = self.Board.Grab_Tile(row, col)
-            #self.Board.Move(piece, new_position)
+                    print(f"Invalid API inside Game_Update, somethinh went really bad!: {key}")
         self.Change_Turn()
         self.UpdateBoard()
 
     def Send_Update(self):
-        old_position = self.Board.last_moved_piece_position_before
-        new_position = self.Board.last_moved_piece_position_after
-        #print(f"Removed pieces inside game: {removed_pieces}")
+        
+        #old_position = self.Board.last_moved_piece_position_before
+        #new_position = self.Board.last_moved_piece_position_after
         removed_pieces = self.Board.Get_Removed_Pieces()
-        print(f"Removed pieces inside game: {removed_pieces}")
-        a = {"Position": (old_position, new_position), "Removed": removed_pieces}
-        print(f"A: {a}")
         
         
-        new_message = {"Game_Update":a}
-        message = {json.dumps((old_position, new_position)):removed_pieces}
-        self.client.Send({"Game_Update":a})
+        data_dict = {"Position": (self.Last_Starting_Position,self.last_ending_position), "Removed": removed_pieces}
+        self.client.Send({"Game_Update":data_dict})
 
 
 
@@ -197,8 +184,17 @@ class Game:
         self.bot_ready = True
 
     def Change_Turn(self):
+        
         if self.turn == self.player_color:
+            if self.selected:
+                self.last_ending_position = self.selected.position()
+            elif self.commited:
+                self.last_ending_position = self.commited.position()
+            else:
+                raise "We shouldnt be here?"
+            
             self.Send_Update()
+            
         if self.turn == Color.WHITE:
             self.turn = Color.BLACK
         else:
@@ -233,6 +229,8 @@ class Game:
                 self.selected = None
             
             elif self.selected:
+                self.Last_Starting_Position = self.selected.position()
+                
                 valid_short_moves = self.selected.Short_ValidMoves(self.Board)
                 valid_long_moves = self.selected.Long_ValidMoves(self.Board)
                 if pos in valid_short_moves:
@@ -247,8 +245,8 @@ class Game:
                     
                     if self.Board.Move(self.selected, pos):
                         self.UpdateBoard()
-                        self.selected = None
                         self.Change_Turn()
+                        self.selected = None
                     
                     else:
                         self.UpdateBoard()
@@ -259,8 +257,8 @@ class Game:
                             self.Highlight_Squares(valid_long_moves)
                             print(f"Valid moves: {valid_long_moves}")
                         else:
-                            self.commited = None
                             self.Change_Turn()
+                            self.commited = None
                 else:
                     print("Select correct tile")
             else:
@@ -274,8 +272,8 @@ class Game:
             
             if self.Board.Move(self.commited, pos):
                 self.UpdateBoard()
-                self.commited = None
                 self.Change_Turn()
+                self.commited = None
             else:
                 self.UpdateBoard()
                 valid_long_moves = self.commited.Long_ValidMoves(self.Board)
@@ -283,8 +281,8 @@ class Game:
                     self.Highlight_Squares(valid_long_moves)
                     print(f"Valid moves: {valid_long_moves}")
                 else:
-                    self.commited = None
                     self.Change_Turn()
+                    self.commited = None
         else:
             print("Select correct tile")
             

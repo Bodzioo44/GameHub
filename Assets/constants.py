@@ -15,16 +15,16 @@ class Game_Type(Enum):
     Chess_2 = 2
     #maybe?
 
-def Dict_Merger(dict_list):
-    dict3 = {}
-    for dict in dict_list:
-        for key, value in dict.items():
-            if key in dict3.keys():
-                old_value = dict3[key]
-                dict3.update({key:[old_value, value]})
-            else:
-                dict3.update({key:value})
-    return dict3
+#def Dict_Merger(dict_list):
+#    dict3 = {}
+#    for dict in dict_list:
+#        for key, value in dict.items():
+#            if key in dict3.keys():
+#                old_value = dict3[key]
+#                dict3.update({key:[old_value, value]})
+#            else:
+#                dict3.update({key:value})
+#    return dict3
 
 
 #maybe use flask or django? idk later on

@@ -133,18 +133,22 @@ class Server:
                 case "Start_Lobby":
                     lobby = player.lobby
                     if lobby:
-                        return_message = {"Message":lobby.Start(player)}
+                        return_messages = [lobby.Start(player)]
                         if lobby.live:
                             for player in lobby.players:
-                                #completly clear and understandable
-                                dict_list = [return_message, {"Start_Lobby":(lobby.type, lobby.colors[player])}, {"Message":f"Started the {lobby.type} as {lobby.colors[player]}"}]
-                                #print(dict_list)
-                                self.Send(player.sock, Dict_Merger(dict_list))
+                                return_dict = {
+                                    "Start_Lobby":(lobby.type, lobby.colors[player]),
+                                    "Message": return_messages + [f"Started the {lobby.type} as {lobby.colors[player]}"]
+                                }
+                                
+                                self.Send(player.sock, return_dict)
+
                         else:
                             self.Send(sock, return_message)
                     else:
-                        return_message = {"Message":"Not inside a lobby"}
-                        self.Send(sock, return_message)
+                        return_messages = ["Not inside a lobby"]
+                        return_dict = {"Message":return_messages}
+                        self.Send(sock, return_dict)
                         
 
                     
@@ -293,142 +297,8 @@ class Server:
             if i not in acitve_lobbies:
                 return i
             i += 1
-
-
-
+            
 
 if __name__ == "__main__":
     Server1 = Server("127.0.0.1", 4444)
     Server1.Start_Server()
-    #print("we done")
-    
-    
-    
-    """    
-    
-        def Listen_For_Connections(self):
-        self.sock.listen()
-        print(f"Listening for new connections at {self.ip}:{self.port}")
-        if platform.system() == "Linux":
-            inputs = [self.sock, sys.stdin]
-            linux = True
-            print("Linux detected, adding sys.stdin to inputs...")
-        else:
-            inputs = [self.sock]
-            linux = False
-            print("sys.stdin is not supported on this OS, starting separate thread for terminal inputs...")
-            Input_Thread = threading.Thread(target = self.Terminal_Input_Thread, args = (), daemon=True)
-            Input_Thread.start()
-
-        try:
-            while self.Running:
-                all_inputs = inputs + list(self.player_list.keys())
-                read_sockets, write_sockets, error_sockets = select.select(all_inputs, [], all_inputs, 2)
-                if read_sockets:
-                    for sock in read_sockets:
-                        #handling new connections requests
-                        if sock == self.sock:
-                            conn, addr = sock.accept()
-                            player_tag = self.Receive(conn)["Connect"]
-
-                            taken_sock = self.Check_Player_Tag_Availability(player_tag) #returns None or socket that is assigned to that name
-                            
-                            
-                            if taken_sock:
-                                if sock not in self.pinged_conns:
-                                    self.pinged_conns.append(taken_sock)
-                                    self.Send(taken_sock, {"Ping":"Connection_Check"})
-                                    
-                                    message = {"Disconnect":"Name already taken, disconnecting from the server... if you are sure name is avaiable try again."}
-                                    print(f"{addr[0]}:{addr[1]} tried to connect under already taken name, disconnecting")
-                                    self.Send(conn, message)
-                                    continue
-                                else:
-                                    
-                                    self.pinged_conns.remove(taken_sock)
-
-                            new_player = Player(player_tag, conn)
-                            
-                            self.player_list.update({conn:new_player})
-                            current_time = strftime("%H:%M:%S", localtime())
-                            print(f"{addr[0]}:{addr[1]} Connected to the Server as {new_player.name} at: {current_time}")
-                            message = {"Message":f"Connected to the Server as {new_player.name} at: {current_time}"}
-                            self.Send(conn, message)
-
-                        #optional for sys.stdin in linux to avoid threading
-                        elif linux and sock == sys.stdin:
-                            input = sys.stdin.readline()
-                            try:
-                                self.Send_All(input)
-                            except json.decoder.JSONDecodeError:
-                                print("Wrong input format, cant decode to json")
-                                
-                        #Handling existing connections
-                        else:
-                            try:
-                                message = self.Receive(sock)
-                                if message:
-                                    print(f"Received a message from {self.player_list[sock].name}: {message}")
-                                    self.Message_Handler(message, sock)
-                                else:
-                                    print("Empty message, disconnecting...")
-                                    self.Disconnect(sock)
-                                    
-                            except socket.error as error:
-                                print(f"socket error detected, disconnecting: {error}")
-                                self.Disconnect(sock)
-                #anything interesting in here?
-                if error_sockets:
-                    for e in error_sockets:
-                        print("BIG ERRORRORORORORORORROROROROROROR")
-                        print(e)
-            #closing actions
-            #TODO message all clients that server is dead?
-            self.sock.close()    
-                                
-        except KeyboardInterrupt:
-            print("Keyboard Interrupt")
-            self.Running = False
-    
-    
-    def Test(Server:Server):
-    while True:
-        message = input()
-        Server.Send_All_Test(message)
-        
-        
-    def Listen_For_Connections_WORKING(self):
-        self.sock.listen()
-        x = True
-        self.inputs = []
-        try:
-            while x:
-                print("its alive!")
-                print([self.sock] + self.inputs)
-                read_sockets, write_sockets, error_sockets = select.select([self.sock] + self.inputs, [], [], 2)
-                
-                if read_sockets:
-                    print("We got something!")
-                    for socket in read_sockets:
-                        
-                        if socket == self.sock:
-                            print(f"its a new connection!")
-                            
-                            print(f"TO SERVER:    {socket}")
-                            conn, addr = socket.accept()
-                            print(f" FROM CLIENT  {conn}")
-                            conn.setblocking(0)
-                            self.Send(conn, {"Message":f"FUCK"})
-                            self.inputs.append(conn)
-                        else:
-                            print("its a message!")
-                            data = socket.recv(4096)
-                            if data:
-                                print(data)
-                            else:
-                                print("PROGRESS")
-                        
-        except KeyboardInterrupt:
-            x = False
-    """
-    

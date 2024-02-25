@@ -12,8 +12,8 @@ class Board:
         
         #for online moves, imo there is no better way to do it
         #maybe add online mode check?
-        self.last_moved_piece_position_before = None
-        self.last_moved_piece_position_after = None
+        #self.last_moved_piece_position_before = None
+        #self.last_moved_piece_position_after = None
         self.last_removed_pieces_positions = []
 
     def __repr__(self):
@@ -43,8 +43,8 @@ class Board:
         Prow, Pcol = piece.position()
         
         #for online moves
-        self.last_moved_piece_position_after = pos
-        self.last_moved_piece_position_before = Prow, Pcol
+        #self.last_moved_piece_position_after = pos
+        #self.last_moved_piece_position_before = Prow, Pcol
         
         self.board[Prow][Pcol] = "0"
         if row == 0 and piece.color == Color.WHITE and piece.name() == "Peon":
@@ -154,11 +154,11 @@ class Board:
     
     #for online moves
     def Get_Removed_Pieces(self):
-        print(f"List inside board {self.last_removed_pieces_positions}")
+        #print(f"List inside board {self.last_removed_pieces_positions}")
         result = self.last_removed_pieces_positions
         self.last_removed_pieces_positions = []
-        print(f"List inside board {self.last_removed_pieces_positions}")
-        print(f"Result: {result}")
+        #print(f"List inside board {self.last_removed_pieces_positions}")
+        #print(f"Result: {result}")
         return result
 
     def CheckForWinner(self, check: bool = False):
