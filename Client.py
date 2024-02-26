@@ -1,3 +1,4 @@
+import threading
 import socket
 import select
 import json
@@ -6,7 +7,7 @@ import sys
 from Checkers.Game import Game as Checkers_Game
 from Chess.Game import Game as Chess_Game
 from Assets.constants import Color
-import threading
+
 
 
 class Client:
@@ -136,7 +137,7 @@ def Test(Client:Client):
 if __name__ == '__main__':
     import threading
     #Client1 = Client('Bodzioo','192.168.1.14', 4444)
-    Client1 = Client(sys.argv[1],'127.0.0.1', 4444)
+    Client1 = Client(sys.argv[1],sys.argv[2], 4444)
     Client1.Connect()
     t1 = threading.Thread(target=Test, args=(Client1,), daemon=True)
     t1.start()
