@@ -299,5 +299,5 @@ class Server:
             i += 1
             
 if __name__ == "__main__":
-    Server1 = Server("127.0.0.1", 4444)
+    Server1 = Server(sys.argv[1], 4444)
     Server1.Start_Server()
