@@ -30,6 +30,10 @@ class Piece:
     #better __str__, returns this instead of memory address whenever function is called
     def __repr__(self):
         return f"<{self.color.name} {self.__class__.__name__} at: {self.row}, {self.col}>"
+    
+    def __hash__(self) -> int:
+        return hash((self.row, self.col, self.color, self.__class__.__name__))
+    
 
 class Peon(Piece):
     def __init__(self, row, col, color, image_size):

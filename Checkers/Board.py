@@ -12,12 +12,17 @@ class Board:
         
         #for online moves, imo there is no better way to do it
         #maybe add online mode check?
-        #self.last_moved_piece_position_before = None
-        #self.last_moved_piece_position_after = None
         self.last_removed_pieces_positions = []
 
     def __repr__(self):
         return f"Board with eval of {self.Evaluate(Color.BLACK)} in favor of {Color.BLACK.name}"
+    
+    def __hash__(self) -> int:
+        final_hash = 0
+        for row in self.board:
+            for col in row:
+                final_hash += hash(col)
+        return final_hash
 
     def Evaluate(self, color):
         eval = 0
@@ -41,10 +46,6 @@ class Board:
     def Move(self, piece, pos):
         row, col = pos
         Prow, Pcol = piece.position()
-        
-        #for online moves
-        #self.last_moved_piece_position_after = pos
-        #self.last_moved_piece_position_before = Prow, Pcol
         
         self.board[Prow][Pcol] = "0"
         if row == 0 and piece.color == Color.WHITE and piece.name() == "Peon":
@@ -137,30 +138,26 @@ class Board:
 
     def Grab_Tile(self, row , col):
         return self.board[row][col]
-    
-
 
     def Remove(self, piece):
-        
         row, col = piece.position()
         self.board[row][col] = "0"
         
         #for online moves
         self.last_removed_pieces_positions.append((row, col))
      
+     
+    #ONLY for removing pieces from online update
     def Remove_by_position(self, row, col):
         self.board[row][col] = "0"
-        #self.last_removed_pieces_positions.append((row, col))
     
     #for online moves
     def Get_Removed_Pieces(self):
-        #print(f"List inside board {self.last_removed_pieces_positions}")
         result = self.last_removed_pieces_positions
         self.last_removed_pieces_positions = []
-        #print(f"List inside board {self.last_removed_pieces_positions}")
-        #print(f"Result: {result}")
         return result
 
+    #TODO this is kinda ugly, especially since this is happening on every iteration of bot minimax
     def CheckForWinner(self, check: bool = False):
         #piece count check
         white_pieces = self.Grab_All_Pieces(Color.WHITE)
@@ -172,17 +169,30 @@ class Board:
             self.winner = Color.WHITE
             return Color.WHITE
         #stalemate check
+        #this should work right?
         if check:
-            white_moves = []
-            black_moves = []
             for piece in white_pieces:
-                white_moves += piece.ValidMoves(self)
-            if white_moves == []:
+                if piece.ValidMoves(self):
+                    break
+            else:
                 return Color.BLACK
+            
             for piece in black_pieces:
-                black_moves += piece.ValidMoves(self)
-            if black_moves == []:
+                if piece.ValidMoves(self):
+                    break
+            else:
                 return Color.WHITE
+            
+            #white_moves = []
+            #black_moves = []
+            #for piece in white_pieces:
+            #    white_moves += piece.ValidMoves(self)
+            #if white_moves == []:
+            #    return Color.BLACK
+            #for piece in black_pieces:
+            #    black_moves += piece.ValidMoves(self)
+            #if black_moves == []:
+            #    return Color.WHITE
         
 
     def create_board(self, extra_row):
@@ -217,3 +227,7 @@ class Board:
     def Print_Board(self):
         for row in self.board:
             print(row)
+            
+            
+
+

@@ -8,7 +8,6 @@ import platform
 from Player import Player
 from Lobby import Lobby
 from time import strftime, localtime
-from Assets.constants import Dict_Merger
 
 class Server:
     def __init__(self, ip: str, port:int = 4444):
@@ -22,7 +21,7 @@ class Server:
         self.player_list = {} #{sock : Player}
         self.disconnected_player_list = {} #{name:Player}
         self.pinged_conns = []
-        self.game_types = {"Chess_4" : 4, "Chess_2" : 2, "Checkers" : 2}
+        self.game_types = {"Chess_4" : 4, "Chess_2" : 2, "Checkers" : 2} #Maybe replace with enum?
         self.debugg = True
         
         #Maybe this needs to be called again in case of server restart?
@@ -63,7 +62,7 @@ class Server:
         player = self.disconnected_player_list[name] #player that we are reconnecting
         player.Reconnect(sock)
         current_time = strftime("%H:%M:%S", localtime())
-        message = {"Message":f"Sucesfully reconnected to the server as {player.name} at {current_time}"}
+        message = {"Message":[f"Sucesfully reconnected to the server as {player.name} at {current_time}"]}
         self.Send(sock, message)
         del self.disconnected_player_list[name]
         self.player_list.update({sock:player})
@@ -84,11 +83,22 @@ class Server:
                         for player in players_to_send:
                             self.Send(player.sock, {"Game_Update":data})
                     else:
-                        return_message = {"Message":"Join or start a lobby first"}
-                        self.Send(sock, return_message)
+                        return_dict = {"Message":["Join or start a lobby first"]}
+                        self.Send(sock, return_dict)
+                        
+                case "Request_Game_History":
+                    lobby = player.lobby
+                    return_dict = {"Request_Game_History":lobby.Request_Game_History(data)}
+                    self.Send(sock, return_dict)
                 
                 case "Message":
-                    print(f"Message Received from {player_name}: {data}")
+                    print(f"Message(s) Received from {player_name}: ", end="")
+                    #if type(data) == list:
+                    for message in data:
+                        print(message)
+                    #else:
+                    #    print(data)
+                    #    raise "some data was sent as a single string, not in a list"
                     
                 case "Request_Lobbies":
                     new_list = {}
@@ -100,33 +110,33 @@ class Server:
                 #data = (lobby_type, lobby_size)
                 case "Create_Lobby":
                     if player.Get_Lobby():
-                        return_message = {"Message":"Cant create a lobby while in another lobby."}
+                        return_message = {"Message":["Cant create a lobby while in another lobby."]}
                     else:
                         lobby_id = self.Get_Lobby_ID()
                         lobby_type, lobby_size = data
                         new_lobby = Lobby(lobby_type, lobby_size, lobby_id, player)
                         self.lobby_list.update({lobby_id:new_lobby})
-                        return_message = {"Message":f"Joined lobby {lobby_id}"}
+                        return_message = {"Message":[f"Joined lobby {lobby_id}"]}
                     self.Send(sock, return_message)
 
                 #data = lobby_id
                 case "Join_Lobby":
                     if data in list(self.lobby_list.keys()):
                         lobby = self.lobby_list[data]
-                        return_message = {"Message":lobby.Add_Player(player)}
+                        return_message = {"Message":[lobby.Add_Player(player)]}
                     else:
-                        return_message = {"Message":"Invalid lobby id"}
+                        return_message = {"Message":["Invalid lobby id"]}
                     self.Send(sock, return_message)
 
                 case "Leave_Lobby":
                     if player.lobby:
                         lobby = player.lobby
-                        return_message = {"Message":lobby.Remove_Player(player)}
+                        return_message = {"Message":[lobby.Remove_Player(player)]}
                         
                         if lobby.player_count == 0:
                             del self.lobby_list[lobby.id]
                     else:
-                        return_message = {"Message":"Player not in a lobby"}
+                        return_message = {"Message":["Player not in a lobby"]}
                         
                     self.Send(sock, return_message)
                         
@@ -138,21 +148,17 @@ class Server:
                             for player in lobby.players:
                                 return_dict = {
                                     "Start_Lobby":(lobby.type, lobby.colors[player]),
-                                    "Message": return_messages + [f"Started the {lobby.type} as {lobby.colors[player]}"]
-                                }
-                                
+                                    "Message": return_messages + [f"Started the {lobby.type} as {lobby.colors[player]}"]}
                                 self.Send(player.sock, return_dict)
 
                         else:
-                            self.Send(sock, return_message)
+                            return_dict
+                            self.Send(sock, return_messages)
                     else:
                         return_messages = ["Not inside a lobby"]
                         return_dict = {"Message":return_messages}
                         self.Send(sock, return_dict)
-                        
 
-                    
-                        
                         
                 case "Ping":
                     self.pinged_conns.remove(sock)
@@ -168,7 +174,7 @@ class Server:
         try:
             while self.Running:
                 all_inputs = self.inputs + list(self.player_list.keys())
-                read_sockets, write_sockets, error_sockets = select.select(all_inputs, [], all_inputs, 2) #2 sec timeout, for keyboard interrupt (temp)
+                read_sockets, write_sockets, error_sockets = select.select(all_inputs, [], [], 2) #2 sec timeout, for keyboard interrupt (temp)
                 if read_sockets:
                     for sock in read_sockets:
                         #handling new connections requests
@@ -200,7 +206,7 @@ class Server:
                                 self.player_list.update({conn:new_player})
                                 current_time = strftime("%H:%M:%S", localtime())
                                 print(f"{addr[0]}:{addr[1]} Connected to the Server as {new_player.name} at: {current_time}")
-                                message = {"Message":f"Connected to the Server as {new_player.name} at: {current_time}"}
+                                message = {"Message":[f"Connected to the Server as {new_player.name} at: {current_time}"]}
                                 self.Send(conn, message)
 
                         #optional for sys.stdin in linux to avoid threading
@@ -222,16 +228,10 @@ class Server:
                                 print(f"Socket error detected: {error}")
                                 self.Disconnect(sock)
                                 
-                #anything interesting in here?
-                if error_sockets:
-                    for e in error_sockets:
-                        print("BIG ERRORRORORORORORORROROROROROROR")
-                        print(e)
-                        
             #closing actions
             #TODO message all clients that server is dead before closing?
             self.sock.close()    
-                                
+
         except KeyboardInterrupt:
             print("Keyboard Interrupt")
             self.Running = False
@@ -298,7 +298,6 @@ class Server:
                 return i
             i += 1
             
-
 if __name__ == "__main__":
     Server1 = Server("127.0.0.1", 4444)
     Server1.Start_Server()

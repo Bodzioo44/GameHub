@@ -14,6 +14,8 @@ class Lobby:
         self.Assign_Color(player)
         self.host = player
         player.Join_Lobby(self)
+        
+        self.game_history = {}
 
 
     #__dict__?
@@ -80,8 +82,15 @@ class Lobby:
             if color not in taken_colors:
                 self.colors.update({player:color})
                 break
-    
-    
+
+    def Update_Game_History(self, game_update:dict):
+        turn = len(self.game_history)
+        self.game_history.update({turn:game_update})
+        
+    def Request_Game_History(self, turn):
+        #returns turns from input, to the end
+        part_dict = {k: self.game_history[k] for k in list(range(turn, len(self.game_history)))}
+        return part_dict
 
     #does lobby needs to do anything with disconnected player? should sending info about disconnecting be here?
     #exit lobby whenever its not started? keep the player after the game started?

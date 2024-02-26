@@ -11,12 +11,8 @@ from Checkers.Board import Board
 from Checkers.Bot import Bot
 
 import threading
-import json
 from time import sleep
-#import asyncio
 
-
-#some better way of assigning players (online) is needed
 class Game:
     def __init__(self, board_pixel_size: int):
         self.board_pixel_size = board_pixel_size
@@ -47,8 +43,6 @@ class Game:
         self.player2 = player2
 
     def Receive_Update(self, data):
-        #data = {(old_position, new_position):(pieces to nuke)}
-        #data = 
         for key, value in data.items():
             match key:
                 case "Position":
@@ -61,21 +55,15 @@ class Game:
                         row, col = pos
                         self.Board.Remove_by_position(row, col)
                 case _:
-                    print(f"Invalid API inside Game_Update, somethinh went really bad!: {key}")
+                    raise f"Invalid key inside Game_Update, somethinh went really bad!: {key}"
         self.Change_Turn()
         self.UpdateBoard()
 
     def Send_Update(self):
-        
-        #old_position = self.Board.last_moved_piece_position_before
-        #new_position = self.Board.last_moved_piece_position_after
         removed_pieces = self.Board.Get_Removed_Pieces()
-        
-        
-        data_dict = {"Position": (self.Last_Starting_Position,self.last_ending_position), "Removed": removed_pieces}
+        data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}
         self.client.Send({"Game_Update":data_dict})
-
-
+        
 
     def Start(self):
         self.window = pygame.display.set_mode((self.board_pixel_size, self.board_pixel_size))
@@ -229,7 +217,7 @@ class Game:
                 self.selected = None
             
             elif self.selected:
-                self.Last_Starting_Position = self.selected.position()
+                self.last_starting_position = self.selected.position()
                 
                 valid_short_moves = self.selected.Short_ValidMoves(self.Board)
                 valid_long_moves = self.selected.Long_ValidMoves(self.Board)
@@ -292,7 +280,6 @@ class Game:
     
     def Kill(self):
         self.running = False
-    
 
 
     """
