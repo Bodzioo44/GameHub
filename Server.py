@@ -1,4 +1,3 @@
-
 import socket
 import select
 import json
@@ -213,9 +212,11 @@ class Server:
                         elif self.linux and sock == sys.stdin:
                             terminal_input = sys.stdin.readline()
                             try:
-                                self.Send_All(terminal_input)
+                                eval(terminal_input)
                             except json.decoder.JSONDecodeError:
                                 print("Wrong input format, cant decode to json")
+                            except Exception as error:
+                                    print(f"this is error {error}")
                                 
                         #Handling existing connections
                         else:
@@ -261,8 +262,7 @@ class Server:
         conn.send(message.encode(self.format))
 
     #Sends message to all clients
-    def Send_All(self, message:str):
-        message = json.loads(message)
+    def Send_All(self, message:dict):
         for key in self.player_list.keys():
             self.Send(key, message)
 
