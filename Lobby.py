@@ -19,6 +19,8 @@ class Lobby:
 
 
     #__dict__?
+    #Add everything that needs to be displayed in GUI into single dict with multiple entries
+    #so the lobby description would look like this: Lobby id - 2; Player Count - (2/4);Game type - Chess; Live - True
     def Get_Dict(self):
         pp = []
         for player in self.players:
