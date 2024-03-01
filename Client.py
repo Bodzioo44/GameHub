@@ -114,7 +114,7 @@ class Client:
             print("Starting listening...")
         try:
             while self.sock:
-                print("is this working?")
+                #print("is this working?")
                 read_sockets, write_sockets, error_sockets = select.select([self.sock], [], [], 2)
                 if read_sockets: #just one socket, so no need to iterate anything
                     try:

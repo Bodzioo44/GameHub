@@ -23,7 +23,7 @@ class MainWindow(QWidget, Ui_Menu):
         self.Chess_2.clicked.connect(self.Chess_2_Button)
         self.Checkers_2.clicked.connect(self.Checkers_2_Button)
 
-        self.lobby_index_list = []
+        self.lobby_list = {} # lobby_id:QTreeWidgetItem
 
 
 
@@ -32,6 +32,15 @@ class MainWindow(QWidget, Ui_Menu):
     USING CLIENT.SEND
     """
 
+    #LOBBY LIST PAGE
+
+    def Join_Lobby_Button(self):
+        print("we would have joined lobby (probably with passed client or something)")
+    
+    def Create_Lobby_Button(self):
+        self.Stacked_Widget.setCurrentWidget(self.Create_Lobby_Page)
+
+    #CREATE LOBBY PAGE
 
     def Exit_From_Lobby_Creation_Button(self):
         self.Select_Game_Type_List.setCurrentItem(None)
@@ -46,20 +55,12 @@ class MainWindow(QWidget, Ui_Menu):
         self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
         
 
-    def Join_Lobby_Button(self):
-        print("we would have joined lobby (probably with passed client or something)")
-    
+
     def Leave_Lobby_Button(self):
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
         self.client.Send({"Leave_Lobby":0})
-        #self.Lobby_Tree.takeTopLevelItem(1)
         print("leave lobby")
     
-
-    #so the lobby description would look like this: Lobby id - 2; Player Count - (2/4);Game type - Chess; Live - True
-    #idk
-    def Create_Lobby_Button(self):
-        self.Stacked_Widget.setCurrentWidget(self.Create_Lobby_Page)
 
     def Start_Lobby_Button(self):
         print("start lobby")
@@ -85,17 +86,22 @@ class MainWindow(QWidget, Ui_Menu):
     EDITS GUI BASED ON SERVER RESPONSE
     """
 
+    #After data needs to be dict, and based on keys edit values
+    
     def Add_Lobby_Tree_Item(self, data):
         item = QTreeWidgetItem()
         for i, value in enumerate(data):
             item.setText(i, str(value))
-        self.lobby_index_list.append(int(data[0]))
         self.Lobby_Tree.addTopLevelItem(item)
+        self.lobby_list.update({data[0]:item})
+
+    def Update_Lobby_Tree_Item(self, data):
+        pass
     
     def Remove_Lobby_Tree_Item(self, data):
         print("We would remove some shit")
-        self.Lobby_Tree.takeTopLevelItem(self.lobby_index_list.index(data))
-
+        #self.Lobby_Tree.takeTopLevelItem(self.lobby_index_list.index(data))
+        self.Remove_Lobby_Tree_Item.removeChild(self.lobby_list[data])
 
 
 
