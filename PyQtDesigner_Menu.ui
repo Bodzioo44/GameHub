@@ -13,74 +13,6 @@
   <property name="windowTitle">
    <string>Main Menu</string>
   </property>
-  <widget class="QPushButton" name="Create_Lobby">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>340</y>
-     <width>90</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Create Lobby</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="Join_Lobby">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>340</y>
-     <width>90</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Join Lobby</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="Leave_Lobby">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>340</y>
-     <width>90</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Leave Lobby</string>
-   </property>
-  </widget>
-  <widget class="QTextEdit" name="Message_Box">
-   <property name="geometry">
-    <rect>
-     <x>530</x>
-     <y>10</y>
-     <width>251</width>
-     <height>431</height>
-    </rect>
-   </property>
-   <property name="verticalScrollBarPolicy">
-    <enum>Qt::ScrollBarAsNeeded</enum>
-   </property>
-   <property name="readOnly">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="Start_Lobby">
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>340</y>
-     <width>90</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Start Lobby</string>
-   </property>
-  </widget>
   <widget class="QLineEdit" name="Message_Input">
    <property name="geometry">
     <rect>
@@ -97,30 +29,170 @@
     <string>Enter message...</string>
    </property>
   </widget>
-  <widget class="QTreeWidget" name="Lobby_Tree">
+  <widget class="QTabWidget" name="Chat_Tab">
+   <property name="geometry">
+    <rect>
+     <x>530</x>
+     <y>10</y>
+     <width>251</width>
+     <height>431</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <property name="tabBarAutoHide">
+    <bool>false</bool>
+   </property>
+   <widget class="QWidget" name="Global_Chat">
+    <attribute name="title">
+     <string>Global Chat</string>
+    </attribute>
+    <widget class="QTextEdit" name="Global_Chat_Box">
+     <property name="geometry">
+      <rect>
+       <x>-1</x>
+       <y>-1</y>
+       <width>251</width>
+       <height>402</height>
+      </rect>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="Lobby_Chat">
+    <attribute name="title">
+     <string>Lobby Chat</string>
+    </attribute>
+    <widget class="QTextEdit" name="Lobby_Chat_Box">
+     <property name="geometry">
+      <rect>
+       <x>-1</x>
+       <y>-1</y>
+       <width>251</width>
+       <height>402</height>
+      </rect>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QStackedWidget" name="stackedWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>10</y>
-     <width>471</width>
-     <height>311</height>
+     <y>20</y>
+     <width>501</width>
+     <height>461</height>
     </rect>
    </property>
-   <column>
-    <property name="text">
-     <string>Lobby ID</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Players</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Type</string>
-    </property>
-   </column>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="Lobby_List_Page">
+    <widget class="QTreeWidget" name="Lobby_Tree">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>471</width>
+       <height>311</height>
+      </rect>
+     </property>
+     <column>
+      <property name="text">
+       <string>Lobby ID</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Players</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Type</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Live</string>
+      </property>
+     </column>
+    </widget>
+    <widget class="QPushButton" name="Join_Lobby">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>350</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Join Lobby</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Create_Lobby">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>350</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Create Lobby</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="Lobby_Page">
+    <widget class="QPushButton" name="Leave_Lobby">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>400</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Leave Lobby</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Start_Lobby">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>400</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Start Lobby</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="Create_Lobby_Page"/>
+   <widget class="QWidget" name="Game_Page"/>
   </widget>
  </widget>
  <resources/>

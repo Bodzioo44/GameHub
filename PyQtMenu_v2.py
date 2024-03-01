@@ -14,7 +14,8 @@ class MainWindow(QWidget, Ui_Menu):
         self.Leave_Lobby.clicked.connect(self.Leave_Lobby_Button)
         self.Message_Input.returnPressed.connect(self.Message_Input_Enter)
 
-        self.Message_History = ""
+        self.Lobby_Message_History = ""
+        self.Global_Message_History = ""
         self.Dict_Lobby_List = []
 
 
@@ -74,14 +75,19 @@ class MainWindow(QWidget, Ui_Menu):
     def Message_Input_Enter(self):
         message = self.Message_Input.text()
         if message:
-            #print(f"we would have sent this: {message}")
-            if self.Message_History:
-                self.Message_History +=  f"\n{message}"
+            if self.Chat_Tab.currentIndex() == 0:
+                current_message_box = self.Global_Chat_Box
+                #current_message_history = self.Global_Message_History
+                #print("we would have sent message to global chat")
+            elif self.Chat_Tab.currentIndex() == 1:
+                #TODO add check if player is in a lobby/if lobby exists
+                #print("we would have sent message to lobby chat")
+                current_message_box = self.Lobby_Chat_Box
+                #current_message_history = self.Lobby_Message_History
             else:
-                self.Message_History += str(message)
-            self.Message_Box.setText(self.Message_History)
-            #just beautiful
-            self.Message_Box.verticalScrollBar().setValue(self.Message_Box.verticalScrollBar().maximum())
+                raise "Out of chat tab indexes, something went really wrong!"
+            current_message_box.append(message)
+            current_message_box.verticalScrollBar().setValue(current_message_box.verticalScrollBar().maximum())
             self.Message_Input.clear()
     
 
