@@ -34,6 +34,13 @@ class Lobby:
             "Host":self.host.name
         }
         return Info
+    
+    def Get_List(self):
+        pp = []
+        for player in self.players:
+            pp.append(player.name)
+        Info = [self.id, pp, self.type, self.live]
+        return Info
 
     def Add_Player(self, player):
         if self.live:

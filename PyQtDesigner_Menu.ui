@@ -93,17 +93,17 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QStackedWidget" name="stackedWidget">
+  <widget class="QStackedWidget" name="Stacked_Widget">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>20</y>
+     <x>0</x>
+     <y>10</y>
      <width>501</width>
      <height>461</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="Lobby_List_Page">
     <widget class="QTreeWidget" name="Lobby_Tree">
@@ -139,7 +139,7 @@
     <widget class="QPushButton" name="Join_Lobby">
      <property name="geometry">
       <rect>
-       <x>120</x>
+       <x>60</x>
        <y>350</y>
        <width>90</width>
        <height>28</height>
@@ -152,7 +152,7 @@
     <widget class="QPushButton" name="Create_Lobby">
      <property name="geometry">
       <rect>
-       <x>270</x>
+       <x>150</x>
        <y>350</y>
        <width>90</width>
        <height>28</height>
@@ -190,8 +190,68 @@
       <string>Start Lobby</string>
      </property>
     </widget>
+    <widget class="QTreeWidget" name="Player_Info_Tree">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>10</y>
+       <width>371</width>
+       <height>321</height>
+      </rect>
+     </property>
+     <column>
+      <property name="text">
+       <string>Name</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Color</string>
+      </property>
+     </column>
+    </widget>
    </widget>
-   <widget class="QWidget" name="Create_Lobby_Page"/>
+   <widget class="QWidget" name="Create_Lobby_Page">
+    <widget class="QPushButton" name="Exit_From_Lobby_Creation">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>290</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Exit</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Chess_2">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>200</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Chess_2</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Checkers_2">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>240</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Checkers_2</string>
+     </property>
+    </widget>
+   </widget>
    <widget class="QWidget" name="Game_Page"/>
   </widget>
  </widget>

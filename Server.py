@@ -68,6 +68,7 @@ class Server:
         print(f"Reconnected {player.name}")
 
     #whole API thingymajiggy
+
     def Message_Handler(self, message, sock):
         player_name = self.player_list[sock].name #name of the client we are handling
         player = self.player_list[sock] #Player object we are handling
@@ -115,7 +116,9 @@ class Server:
                         lobby_type, lobby_size = data
                         new_lobby = Lobby(lobby_type, lobby_size, lobby_id, player)
                         self.lobby_list.update({lobby_id:new_lobby})
-                        return_message = {"Message":[f"Joined lobby {lobby_id}"]}
+                        return_message = {"Message":[f"Joined lobby {lobby_id}"],
+                                          "Create_Lobby":new_lobby.Get_List()
+                                          }
                     self.Send(sock, return_message)
 
                 #data = lobby_id
@@ -299,5 +302,9 @@ class Server:
             i += 1
             
 if __name__ == "__main__":
-    Server1 = Server(sys.argv[1], 4444)
+    if len(sys.argv) > 1:
+        ip = sys.argv[1]
+    else:
+        ip = '192.168.1.14'
+    Server1 = Server(ip, 4444)
     Server1.Start_Server()

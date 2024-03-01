@@ -7,18 +7,20 @@ import sys
 from Checkers.Game import Game as Checkers_Game
 from Chess.Game import Game as Chess_Game
 from Assets.constants import Color
+#from PyQtMenu_v2 import MainWindow
 
 
 
 class Client:
-    def __init__(self, name: str, server: str, port:int = 4444):
+    def __init__(self, name: str, server: str, port:int, gui):
         self.server = server
         self.port = port
+        self.gui = gui
+        self.name = name
         self.addr = (server, port)
         self.sock = None
         self.format = "utf-8"
         self.buff_size = 4096
-        self.name = name
         self.game = None
 
     def Connect(self):
@@ -57,6 +59,7 @@ class Client:
         else:
             raise socket.error("Received empty message")
 
+    #TODO this needs to edit gui elements
     def Message_Handler(self, message):
         for api_id, data in message.items():
             #print(f"Received: {api_id}:{data}")
@@ -76,6 +79,15 @@ class Client:
                     self.game.Assign_Online_Players(player_color, self)
                     self.game_thread = threading.Thread(target = lambda: self.game.Start()).start()
                 
+                #Data = lobby [id, players, type, live]
+                case "Create_Lobby":
+                    print(data)
+                    self.gui.Add_Lobby_Tree_Item(data)
+
+                #Data = lobby_id
+                case "Leave_Lobby":
+                    self.gui.Remove_Lobby_Tree_Item(data)
+
                 case "Request_Lobbies":
                     for key, value in data.items():
                         print(f"Lobby id: {key}, Lobby info: {value}")
@@ -102,6 +114,7 @@ class Client:
             print("Starting listening...")
         try:
             while self.sock:
+                print("is this working?")
                 read_sockets, write_sockets, error_sockets = select.select([self.sock], [], [], 2)
                 if read_sockets: #just one socket, so no need to iterate anything
                     try:
