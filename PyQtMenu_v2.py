@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QModelIndex
 from PyQtDesigner_Menu import Ui_Menu
 import threading
 import sys
@@ -35,9 +36,16 @@ class MainWindow(QWidget, Ui_Menu):
     #LOBBY LIST PAGE
 
     def Join_Lobby_Button(self):
-        print("we would have joined lobby (probably with passed client or something)")
+        #SENDS {"Join_Lobby":lobby_id} to the server if lobby is selected
+
+        if selected := self.Lobby_Tree.selectedItems():
+            print("Sending Join_Lobby request.")
+            self.client.Send({"Join_Lobby":int(selected[0].text(0))})
+        else:
+            print("select a lobby first")
     
     def Create_Lobby_Button(self):
+        #MOVES TO THE CREATE LOBBY PAGE
         self.Stacked_Widget.setCurrentWidget(self.Create_Lobby_Page)
 
     #CREATE LOBBY PAGE
@@ -53,13 +61,12 @@ class MainWindow(QWidget, Ui_Menu):
     def Checkers_2_Button(self):
         self.client.Send({"Create_Lobby":("Checkers_2", 2)})
         self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
-        
 
 
     def Leave_Lobby_Button(self):
-        self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+        #self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
         self.client.Send({"Leave_Lobby":0})
-        print("leave lobby")
+        print("Sent request to leave lobby")
     
 
     def Start_Lobby_Button(self):
@@ -87,7 +94,7 @@ class MainWindow(QWidget, Ui_Menu):
     """
 
     #After data needs to be dict, and based on keys edit values
-    
+    #IDk about above, but maybe merge these 2?
     def Add_Lobby_Tree_Item(self, data):
         item = QTreeWidgetItem()
         for i, value in enumerate(data):
@@ -96,13 +103,17 @@ class MainWindow(QWidget, Ui_Menu):
         self.lobby_list.update({data[0]:item})
 
     def Update_Lobby_Tree_Item(self, data):
-        pass
+        item = self.lobby_list[data[0]]
+        for i, value in enumerate(data):
+            item.setText(i, str(value))
     
     def Remove_Lobby_Tree_Item(self, data):
         print("We would remove some shit")
         #self.Lobby_Tree.takeTopLevelItem(self.lobby_index_list.index(data))
-        self.Remove_Lobby_Tree_Item.removeChild(self.lobby_list[data])
-
+        index = QModelIndex(self.Lobby_Tree).row(self.lobby_list[data])
+        print(index)
+        self.Remove_Lobby_Tree_Item.takeTopLevelItem()
+        del self.lobby_list[data]
 
 
     #Add another stacked widget for assigning client (connecting/disconnecting)

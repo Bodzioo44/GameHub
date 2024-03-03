@@ -110,22 +110,25 @@ class Server:
                 #data = (lobby_type, lobby_size)
                 case "Create_Lobby":
                     if player.Get_Lobby():
-                        return_message = {"Message":["Cant create a lobby while in another lobby."]}
+                        return_dict = {"Message":["Cant create a lobby while in another lobby."]}
                     else:
                         lobby_id = self.Get_Lobby_ID()
                         lobby_type, lobby_size = data
                         new_lobby = Lobby(lobby_type, lobby_size, lobby_id, player)
                         self.lobby_list.update({lobby_id:new_lobby})
-                        return_message = {"Message":[f"Joined lobby {lobby_id}"],
+                        return_dict = {"Message":[f"Joined lobby {lobby_id}"],
                                           "Create_Lobby":new_lobby.Get_List()
                                           }
-                    self.Send(sock, return_message)
+                    self.Send(sock, return_dict)
 
                 #data = lobby_id
+                #if correct sends everyone in a lobby info who joined
                 case "Join_Lobby":
-                    if data in list(self.lobby_list.keys()):
-                        lobby = self.lobby_list[data]
-                        return_message = {"Message":[lobby.Add_Player(player)]}
+                    if data in list(self.lobby_list.keys()): #checks if lobby exists
+                        lobby = self.lobby_list[data] 
+                        #Lobby actions should return whole dict with message and data
+                        for key, value in lobby.Add_Player(player):
+                            self.Send(key.sock, value)
                     else:
                         return_message = {"Message":["Invalid lobby id"]}
                     self.Send(sock, return_message)
@@ -133,14 +136,20 @@ class Server:
                 case "Leave_Lobby":
                     if player.lobby:
                         lobby = player.lobby
-                        return_message = {"Message":[lobby.Remove_Player(player)]}
-                        
-                        if lobby.player_count == 0:
-                            del self.lobby_list[lobby.id]
+                        lobby_id = lobby.id
+
+                        if return_dict := lobby.Remove_Player(player):
+                            for key, value in return_dict:
+                                self.Send(key.sock, value)
+                        else:
+                            #For now its being sent only for the last player inside lobby.
+
+                            self.Send(sock, {"Remove_Lobby":lobby_id})
+                            del self.lobby_list[lobby_id]
+
                     else:
                         return_message = {"Message":["Player not in a lobby"]}
-                        
-                    self.Send(sock, return_message)
+                        self.Send(sock, return_message)
                         
                 case "Start_Lobby":
                     lobby = player.lobby
@@ -257,12 +266,16 @@ class Server:
             except json.decoder.JSONDecodeError:
                 print("Wrong input format, cant decode to json")
 
-    #Sends message to a specific client
+    #TODO Add check if the player is still connected here?
     def Send(self, conn: socket.socket, message: dict):
         if self.debugg:
             print(f"Sent: {message}")
         message = json.dumps(message)
         conn.send(message.encode(self.format))
+
+    def Send_Lobby(self, lobby:Lobby, message:dict):
+        for player in lobby.players:
+            self.Send(player.sock, message)
 
     #Sends message to all clients
     def Send_All(self, message:dict):

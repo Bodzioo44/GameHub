@@ -42,21 +42,31 @@ class Lobby:
         Info = [self.id, pp, self.type, self.live]
         return Info
 
+
+    #Lobby should return finished dict with data assigned for each player
+    #for example: {Player: dict_tos_send_}
     def Add_Player(self, player):
+        return_dict = {}
         if self.live:
-            return "Lobby already started"
+            return_dict.update({player:{"Message": ["Lobby already started"]}})
         elif player.Get_Lobby() == self:
-            return "Player already in this lobby"
+            return_dict.update({player:{"Message": ["Player already in this lobby"]}})
         elif player.Get_Lobby():
-            return "Cant join multiple lobbies"
+            return_dict.update({player:{"Message": ["Cant join multiple lobbies"]}})
         elif self.player_count == self.size:
-            return "Lobby is full"
+            return_dict.update({player:{"Message": ["Lobby is full"]}})
         else:
+            
             self.player_count += 1
             self.players.append(player)
             self.Assign_Color(player)
             player.Join_Lobby(self)
-            return "Joined the lobby"
+
+            for p in self.players:
+                return_dict.update({p:{"Message":[f"{player.name} has joined ther lobby"]}})
+                #TODO Return dict? list? idk yet
+                return_dict[p].update({"Update_Lobby":self.Get_List()})
+        return return_dict
 
     def Start(self, player):
         if player != self.host:
@@ -67,16 +77,40 @@ class Lobby:
         else:
             return "Lobby is not filled"
         
-    #cant leave while game is on? idk
+    #cant leave while game is on? idk 
+    # 1- Cant leave while game is live.
+    # 2- if host changed send additional message
+    # 3- if lobby is empty, remove it (outside check)
+    # 4- if player left, send to everyone and update lobby
+
     def Remove_Player(self, player):
-        #print(f"{player.name} has left the lobby")
+        return_dict = {}
+        if self.live:
+            return_dict.update({player:{"Message":["Cant leave live lobby."]}})
+            return return_dict
+        
         self.players.remove(player)
-        del self.colors[player]
-        if player == self.host and self.players:
-            self.host = self.players[0]
-        player.Leave_Lobby()
         self.player_count -= 1
-        return "Left the lobby"
+        del self.colors[player]
+        player.Leave_Lobby()
+
+        if self.players:
+            message_list = [f"{player.name} has left the lobby."]
+
+            if player == self.host:
+                self.host = self.players[0]
+                message_list.append(f"{self.host.name} is now a host.")
+            
+            for p in self.players:
+                return_dict.update({p:{"Message":message_list,
+                                       "Update_Lobby":self.Get_List()}})
+            return return_dict
+        else:
+            return False
+
+
+
+
 
     def Other_Players(self, current_player):
         players_to_send = []

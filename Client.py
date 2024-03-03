@@ -81,11 +81,20 @@ class Client:
                 
                 #Data = lobby [id, players, type, live]
                 case "Create_Lobby":
-                    print(data)
+                    print(f"Received call to create lobby: {data}")
                     self.gui.Add_Lobby_Tree_Item(data)
 
-                #Data = lobby_id
+                #Data = lobby [id, players, type, live]
+                case "Update_Lobby":
+                    print(f"Received call to update lobby: {data}")
+                    self.gui.Update_Lobby_Tree_Item(data)
+
                 case "Leave_Lobby":
+                    print(f"Received call to leave lobby, changing current widget: {data}")
+                    self.gui.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+
+                #Data = lobby_id
+                case "Remove_Lobby":
                     self.gui.Remove_Lobby_Tree_Item(data)
 
                 case "Request_Lobbies":

@@ -5,7 +5,6 @@ from Assets.constants import Color
 
 
 
-
 def main():
     Game = Checkers_Game(Color.WHITE, 800, 4, 4)
     Game_Client = Client("Bodzioo", "127.0.0.1", 4444)
