@@ -54,6 +54,9 @@ class Ui_Menu(object):
         self.Create_Lobby = QtWidgets.QPushButton(self.Lobby_List_Page)
         self.Create_Lobby.setGeometry(QtCore.QRect(150, 350, 90, 28))
         self.Create_Lobby.setObjectName("Create_Lobby")
+        self.Update_Lobby_List = QtWidgets.QPushButton(self.Lobby_List_Page)
+        self.Update_Lobby_List.setGeometry(QtCore.QRect(240, 350, 90, 28))
+        self.Update_Lobby_List.setObjectName("Update_Lobby_List")
         self.Stacked_Widget.addWidget(self.Lobby_List_Page)
         self.Lobby_Page = QtWidgets.QWidget()
         self.Lobby_Page.setObjectName("Lobby_Page")
@@ -85,7 +88,7 @@ class Ui_Menu(object):
 
         self.retranslateUi(Menu)
         self.Chat_Tab.setCurrentIndex(0)
-        self.Stacked_Widget.setCurrentIndex(2)
+        self.Stacked_Widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Menu)
 
     def retranslateUi(self, Menu):
@@ -100,6 +103,7 @@ class Ui_Menu(object):
         self.Lobby_Tree.headerItem().setText(3, _translate("Menu", "Live"))
         self.Join_Lobby.setText(_translate("Menu", "Join Lobby"))
         self.Create_Lobby.setText(_translate("Menu", "Create Lobby"))
+        self.Update_Lobby_List.setText(_translate("Menu", "Update List"))
         self.Leave_Lobby.setText(_translate("Menu", "Leave Lobby"))
         self.Start_Lobby.setText(_translate("Menu", "Start Lobby"))
         self.Player_Info_Tree.headerItem().setText(0, _translate("Menu", "Name"))

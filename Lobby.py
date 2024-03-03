@@ -61,11 +61,13 @@ class Lobby:
             self.players.append(player)
             self.Assign_Color(player)
             player.Join_Lobby(self)
+            print(f"{player} has joned a lobby {self.id}")
 
             for p in self.players:
-                return_dict.update({p:{"Message":[f"{player.name} has joined ther lobby"]}})
-                #TODO Return dict? list? idk yet
+                return_dict.update({p:{"Message":[f"{player.name} has joined the lobby"]}})
                 return_dict[p].update({"Update_Lobby":self.Get_List()})
+            return_dict[player].update({"Join_Lobby":self.id})
+        print(f"Returning this: {return_dict}")
         return return_dict
 
     def Start(self, player):

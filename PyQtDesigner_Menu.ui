@@ -103,7 +103,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="Lobby_List_Page">
     <widget class="QTreeWidget" name="Lobby_Tree">
@@ -160,6 +160,19 @@
      </property>
      <property name="text">
       <string>Create Lobby</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Update_Lobby_List">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>350</y>
+       <width>90</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Update List</string>
      </property>
     </widget>
    </widget>

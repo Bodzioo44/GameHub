@@ -23,6 +23,7 @@ class MainWindow(QWidget, Ui_Menu):
         self.Exit_From_Lobby_Creation.clicked.connect(self.Exit_From_Lobby_Creation_Button)
         self.Chess_2.clicked.connect(self.Chess_2_Button)
         self.Checkers_2.clicked.connect(self.Checkers_2_Button)
+        self.Update_Lobby_List.clicked.connect(self.Update_Lobby_List_Button)
 
         self.lobby_list = {} # lobby_id:QTreeWidgetItem
 
@@ -47,6 +48,9 @@ class MainWindow(QWidget, Ui_Menu):
     def Create_Lobby_Button(self):
         #MOVES TO THE CREATE LOBBY PAGE
         self.Stacked_Widget.setCurrentWidget(self.Create_Lobby_Page)
+
+    def Update_Lobby_List_Button(self):
+        self.client.Send({"Request_Lobbies":0})
 
     #CREATE LOBBY PAGE
 
@@ -77,12 +81,8 @@ class MainWindow(QWidget, Ui_Menu):
         message = self.Message_Input.text()
         if message:
             current_message_box = self.Chat_Tab.currentWidget().findChildren(QTextEdit)[0]
-            if current_message_box.objectName() == "Lobby_Chat_Box":
-                if not self.Stacked_Widget.currentWidget() in (self.Lobby_Page, self.Game_Page):
-                    message = "Join a lobby first!"
-            current_message_box.append(message)
-            current_message_box.verticalScrollBar().setValue(current_message_box.verticalScrollBar().maximum())
-            self.Message_Input.clear()
+            self.client.Send({current_message_box.objectName():[f"{self.client.name}: "+message]})
+
     
 
 
@@ -96,6 +96,7 @@ class MainWindow(QWidget, Ui_Menu):
     #After data needs to be dict, and based on keys edit values
     #IDk about above, but maybe merge these 2?
     def Add_Lobby_Tree_Item(self, data):
+        print(f"Updating QTreeWidget with this: {data}")
         item = QTreeWidgetItem()
         for i, value in enumerate(data):
             item.setText(i, str(value))
@@ -115,12 +116,37 @@ class MainWindow(QWidget, Ui_Menu):
         self.Remove_Lobby_Tree_Item.takeTopLevelItem()
         del self.lobby_list[data]
 
+    def Update_Global_Chat(self, data):
+        for message in data:
+            self.Global_Chat_Box.append(message)
+        self.Global_Chat_Box.verticalScrollBar().setValue(self.Global_Chat_Box.verticalScrollBar().maximum())
+        self.Message_Input.clear()
+    
+    def Update_Lobby_Chat(self, data):
+        for message in data:
+            self.Lobby_Chat_Box.append(message)
+        self.Lobby_Chat_Box.verticalScrollBar().setValue(self.Lobby_Chat_Box.verticalScrollBar().maximum())
+        self.Message_Input.clear()       
+
+        """
+        if current_message_box.objectName() == "Lobby_Chat_Box":
+            if not self.Stacked_Widget.currentWidget() in (self.Lobby_Page, self.Game_Page):
+                message = "Join a lobby first!"
+        current_message_box.append(message)
+        current_message_box.verticalScrollBar().setValue(current_message_box.verticalScrollBar().maximum())
+        self.Message_Input.clear()
+        """
+
+
 
     #Add another stacked widget for assigning client (connecting/disconnecting)
     #Always pass gui while creating client
     def Assign_Client(self):
         #self.client = Client("Bodzioo", "83.22.225.247", 4444, self)
-        self.client = Client("Bodzioo", '127.0.0.1', 4444, self)
+        if len(sys.argv) == 3:
+            self.client = Client(sys.argv[1], sys.argv[2], 4444, self)
+        else:
+            self.client = Client("Bodzioo", '127.0.0.1', 4444, self)
         self.client.Connect()
         listening_thread = threading.Thread(target = lambda: self.client.StartListening())
         listening_thread.start()

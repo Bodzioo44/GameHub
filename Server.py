@@ -103,7 +103,7 @@ class Server:
                 case "Request_Lobbies":
                     new_list = {}
                     for key, value in self.lobby_list.items():
-                        new_list.update({key:value.Get_Dict()})
+                        new_list.update({key:value.Get_List()})
                     return_message = {"Request_Lobbies":new_list}
                     self.Send(sock, return_message)
 
@@ -117,7 +117,7 @@ class Server:
                         new_lobby = Lobby(lobby_type, lobby_size, lobby_id, player)
                         self.lobby_list.update({lobby_id:new_lobby})
                         return_dict = {"Message":[f"Joined lobby {lobby_id}"],
-                                          "Create_Lobby":new_lobby.Get_List()
+                                       "Create_Lobby":new_lobby.Get_List()
                                           }
                     self.Send(sock, return_dict)
 
@@ -127,11 +127,11 @@ class Server:
                     if data in list(self.lobby_list.keys()): #checks if lobby exists
                         lobby = self.lobby_list[data] 
                         #Lobby actions should return whole dict with message and data
-                        for key, value in lobby.Add_Player(player):
+                        for key, value in lobby.Add_Player(player).items():
                             self.Send(key.sock, value)
                     else:
                         return_message = {"Message":["Invalid lobby id"]}
-                    self.Send(sock, return_message)
+                        self.Send(sock, return_message)
 
                 case "Leave_Lobby":
                     if player.lobby:
@@ -170,10 +170,21 @@ class Server:
                         return_dict = {"Message":return_messages}
                         self.Send(sock, return_dict)
 
+                #data = [Player_name: message]
+                case "Lobby_Chat_Box":
+                    if current_lobby := player.Get_Lobby():
+                        self.Send_Lobby(current_lobby, {api_id:data})
+                    else:
+                        self.Send(sock, {api_id:["Join a Lobby First!"]})
+
+                #data = [Player_name: message]
+                case "Global_Chat_Box":
+                    self.Send_All({api_id:data})
                         
                 case "Ping":
                     self.pinged_conns.remove(sock)
                     print(f"{player_name} has responded to the ping.")
+
 
                 case _:
                     print("api doesnt match, whoops")

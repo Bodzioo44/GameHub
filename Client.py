@@ -78,7 +78,7 @@ class Client:
                     self.game = self.Pick_Game_Type(lobby_type)
                     self.game.Assign_Online_Players(player_color, self)
                     self.game_thread = threading.Thread(target = lambda: self.game.Start()).start()
-                
+        
                 #Data = lobby [id, players, type, live]
                 case "Create_Lobby":
                     print(f"Received call to create lobby: {data}")
@@ -89,17 +89,22 @@ class Client:
                     print(f"Received call to update lobby: {data}")
                     self.gui.Update_Lobby_Tree_Item(data)
 
+                case "Join_Lobby":
+                    print(f"Received call to join lobby, changing current widget: {data}")
+                    self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Page)
+
                 case "Leave_Lobby":
                     print(f"Received call to leave lobby, changing current widget: {data}")
-                    self.gui.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+                    self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_List_Page)
 
                 #Data = lobby_id
                 case "Remove_Lobby":
                     self.gui.Remove_Lobby_Tree_Item(data)
 
+                #Data = Lobby.Get_List()
                 case "Request_Lobbies":
-                    for key, value in data.items():
-                        print(f"Lobby id: {key}, Lobby info: {value}")
+                    for value in data.values():
+                        self.gui.Add_Lobby_Tree_Item(value)
                 
                 case "Ping":
                     print(f"Received Ping from the server, sending it back: {message}")
@@ -110,6 +115,12 @@ class Client:
                     print(f"Message(s) Received from the Server: ", end="")
                     for message in data:
                         print(message)
+
+                case "Global_Chat_Box":
+                    self.gui.Update_Global_Chat(data)
+
+                case "Lobby_Chat_Box":
+                    self.gui.Update_Lobby_Chat(data)
 
                 case "Disconnect":
                     print(data)
