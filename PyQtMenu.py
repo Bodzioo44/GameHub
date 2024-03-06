@@ -1,115 +1,175 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QMainWindow, QStackedWidget, QApplication, QLabel
-from Checkers.Game import Game as Checkers_Game
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QModelIndex
+from PyQtDesigner_Menu import Ui_Menu
+import threading
+import sys
+from Client import Client
 
-class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
+#TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
+#TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
+#TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
+#TODO Add another stackedwidget window for connecting/reconnecting?
+class MainWindow(QWidget, Ui_Menu):
+    def __init__(self, parent = None):
         super().__init__(parent)
-        self.central_widget = QStackedWidget()
-        self.setCentralWidget(self.central_widget)
-        
-        network_widget = NetworkWidget(self)
-        network_widget.Online_button.clicked.connect(self.OnlineButton)
-        network_widget.Offline_button.clicked.connect(self.OfflineButton)
-        
-        self.central_widget.addWidget(network_widget)
-        
-    def OnlineButton(self):
-        print("we would switch to next Online submenu")
-        online_widget = OnlineWidget(self)
-        self.central_widget.addWidget(online_widget)
-        self.central_widget.setCurrentWidget(online_widget)
-        
-    def OfflineButton(self):
-        print("we would switch to next Offline submenu")
-        offline_widget = OfflineWidget(self)
-        offline_widget.Checkers_button.clicked.connect(self.OfflineCheckersButton)
-        offline_widget.Chess_button.clicked.connect(self.OfflineChessButton)
-        
-        self.central_widget.addWidget(offline_widget)
-        self.central_widget.setCurrentWidget(offline_widget)
+        self.setupUi(self)
+
+
+        self.Create_Lobby.clicked.connect(self.Create_Lobby_Button)
+        self.Join_Lobby.clicked.connect(self.Join_Lobby_Button)
+        self.Start_Lobby.clicked.connect(self.Start_Lobby_Button)
+        self.Leave_Lobby.clicked.connect(self.Leave_Lobby_Button)
+        self.Message_Input.returnPressed.connect(self.Message_Input_Enter_Button)
+        self.Exit_From_Lobby_Creation.clicked.connect(self.Exit_From_Lobby_Creation_Button)
+        self.Chess_2.clicked.connect(self.Chess_2_Button)
+        self.Checkers_2.clicked.connect(self.Checkers_2_Button)
+        self.Update_Lobby_List.clicked.connect(self.Update_Lobby_List_Button)
+        self.Online.clicked.connect(self.Online_Mode_Button)
+        self.Offline.clicked.connect(self.Offline_Mode_Button)
+
+        #Not needed since QTreeWidget is being redone every time
+        #self.lobby_list = {} # lobby_id:QTreeWidgetItem
+        #self.player_list = {} # player_name:QTreeWidgetItem
+
+
+
+    """
+    SENDS INFO DIRECTLY TO THE SERVER BASED ON ACTION INSIDE GUI
+    USING CLIENT.SEND
+    """
+
+    #CONNECTION PAGE
+
+    def Offline_Mode_Button(self):
+        pass
+    def Online_Mode_Button(self):
+        self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+
+    #LOBBY LIST PAGE
+
+    def Join_Lobby_Button(self):
+        #SENDS {"Join_Lobby":lobby_id} to the server if lobby is selected
+
+        if selected := self.Lobby_Tree.selectedItems():
+            print("Sending Join_Lobby request.")
+            self.client.Send({"Join_Lobby":int(selected[0].text(0))})
+        else:
+            print("select a lobby first")
     
-    def OfflineCheckersButton(self):
-        print("we would switch to next Offline Checker submenu")
-        offline_checkers_widget = Offline_CheckersWidget(self)
-        offline_checkers_widget.EvE_button.clicked.connect(self.OfflineCheckersButtonEvE)
-        offline_checkers_widget.PvE_button.clicked.connect(self.OfflineCheckersButtonPvE)
-        offline_checkers_widget.PvP_button.clicked.connect(self.OfflineCheckersButtonPvP)
+    def Create_Lobby_Button(self):
+        #MOVES TO THE CREATE LOBBY PAGE
+        self.Stacked_Widget.setCurrentWidget(self.Create_Lobby_Page)
 
-        self.central_widget.addWidget(offline_checkers_widget)
-        self.central_widget.setCurrentWidget(offline_checkers_widget)
-        
-    def OfflineChessButton(self):
-        print("we would switch to next Offline Checker submenu")
-        
-    def OfflineCheckersButtonEvE(self):
-        print("launching EVE checkers")
-        self.close()
-        
-        Game = Checkers_Game(800, 4, 4)
-        Game.Start()
-    def OfflineCheckersButtonPvE(self):
-        print("launching PVE checkers")
-        self.close()
-        Game = Checkers_Game(800, 4)
-        Game.Start()
-    def OfflineCheckersButtonPvP(self):
-        print("launching PVP checkers")
-        self.close()
-        Game = Checkers_Game(800)
-        Game.Start()
+    def Update_Lobby_List_Button(self):
+        self.client.Send({"Request_Lobbies":0})
+
+    #CREATE LOBBY PAGE
+
+    def Exit_From_Lobby_Creation_Button(self):
+        self.Select_Game_Type_List.setCurrentItem(None)
+        self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+
+    def Chess_2_Button(self):
+        self.client.Send({"Create_Lobby":("Chess_2", 2)})
+        self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
+
+    def Checkers_2_Button(self):
+        self.client.Send({"Create_Lobby":("Checkers_2", 2)})
+        self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
 
 
+    def Leave_Lobby_Button(self):
+        #self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+        self.client.Send({"Leave_Lobby":0})
+        print("Sent request to leave lobby")
+    
 
-class NetworkWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        layout = QHBoxLayout()
-        self.Online_button = QPushButton("Online")
-        self.Offline_button = QPushButton("Offline")
-        layout.addWidget(self.Online_button)
-        layout.addWidget(self.Offline_button)
-        self.setLayout(layout)
-        
-class OfflineWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        layout = QHBoxLayout()
-        self.Chess_button = QPushButton("Chess")
-        self.Checkers_button = QPushButton("Checkers")
-        layout.addWidget(self.Chess_button)
-        layout.addWidget(self.Checkers_button)
-        self.setLayout(layout)
+    def Start_Lobby_Button(self):
+        print("start lobby")
 
-class Offline_CheckersWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        layout = QHBoxLayout()
-        self.EvE_button = QPushButton("EvE")
-        self.PvE_button = QPushButton("PvE")
-        self.PvP_button = QPushButton("PvP")
-        layout.addWidget(self.EvE_button)
-        layout.addWidget(self.PvE_button)
-        layout.addWidget(self.PvP_button)
-        self.setLayout(layout)
 
-class OnlineWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        layout = QHBoxLayout()
-        self.LocalHost_button = QPushButton("127.0.0.1")
-        self.LocalAddress_button = QPushButton("192.168.X.X")
-        self.PublicIPAddress_button = QPushButton("Connect to public server")
-        layout.addWidget(self.LocalHost_button)
-        layout.addWidget(self.LocalAddress_button)
-        layout.addWidget(self.PublicIPAddress_button)
-        self.setLayout(layout)
+    def Message_Input_Enter_Button(self):
+        message = self.Message_Input.text()
+        if message:
+            current_message_box = self.Chat_Tab.currentWidget().findChildren(QTextEdit)[0]
+            self.client.Send({current_message_box.objectName():[f"{self.client.name}: "+message]})
 
 
 
+    """
+    CALLED DIRECTLY FROM CLIENT.MESSAGE_HANDLER()
+    EDITS GUI BASED ON SERVER RESPONSE
+    """
+
+    def Add_Lobby_Tree_Items(self, data):
+        self.Lobby_Tree.clear()
+        print(f"Updating QTreeWidget (Lobby_Tree_) with this: {data}")
+        item = QTreeWidgetItem()
+        for i, value in enumerate(data):
+            item.setText(i, str(value))
+        self.Lobby_Tree.addTopLevelItem(item)
+        #self.lobby_list.update({data[0]:item})
+
+    def Add_Player_Info_Items(self, data):
+        self.Player_Info_Tree.clear()
+        print(f"Updating QTreeWidget (Player_Info_Tree) with this: {data}")
+        item = QTreeWidgetItem()
+        for i, value in enumerate(data):
+            item.setText(i, str(value))
+        self.Player_Info_Tree.addTopLevelItem(item)
+        #self.player_list.update({data[0]:item})
 
 
-if __name__ == '__main__':
-    app = QApplication([])
+
+    """
+
+    #After data needs to be dict, and based on keys edit values
+    #IDk about above, but maybe merge these 2?
+    def Update_Lobby_Tree_Item(self, data):
+        item = self.lobby_list[data[0]]
+        for i, value in enumerate(data):
+            item.setText(i, str(value))
+    
+
+    #TODO fix this finally
+    def Remove_Lobby_Tree_Item(self, data):
+        #self.Lobby_Tree.takeTopLevelItem(self.lobby_index_list.index(data))
+        index = QModelIndex(self.Lobby_Tree).row(self.lobby_list[data])
+        print(f"We would remove some shit: {index}")
+        self.Lobby_Tree.takeTopLevelItem(index)
+        del self.lobby_list[data]
+    #TODO fuck removing items, just redo whole table on every request? YAP
+    """
+
+    def Update_Global_Chat(self, data):
+        for message in data:
+            self.Global_Chat_Box.append(message)
+        self.Global_Chat_Box.verticalScrollBar().setValue(self.Global_Chat_Box.verticalScrollBar().maximum())
+        self.Message_Input.clear()
+    
+    def Update_Lobby_Chat(self, data):
+        for message in data:
+            self.Lobby_Chat_Box.append(message)
+        self.Lobby_Chat_Box.verticalScrollBar().setValue(self.Lobby_Chat_Box.verticalScrollBar().maximum())
+        self.Message_Input.clear()       
+
+
+
+    #Add another stacked widget for assigning client (connecting/disconnecting)
+    #Always pass gui while creating client
+    def Assign_Client(self):
+        #self.client = Client("Bodzioo", "83.22.225.247", 4444, self)
+        if len(sys.argv) == 3:
+            self.client = Client(sys.argv[1], sys.argv[2], 4444, self)
+        else:
+            self.client = Client("Bodzioo", '127.0.0.1', 4444, self)
+        self.client.Connect()
+        listening_thread = threading.Thread(target = lambda: self.client.StartListening())
+        listening_thread.start()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
     window = MainWindow()
+    window.Assign_Client()
     window.show()
-    app.exec_()
+    sys.exit(app.exec_())

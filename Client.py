@@ -80,12 +80,7 @@ class Client:
                 #Data = lobby [id, players, type, live]
                 case "Create_Lobby":
                     print(f"Received call to create lobby: {data}")
-                    self.gui.Add_Lobby_Tree_Item(data)
-
-                #Data = lobby [id, players, type, live]
-                case "Update_Lobby":
-                    print(f"Received call to update lobby: {data}")
-                    self.gui.Update_Lobby_Tree_Item(data)
+                    self.gui.Add_Lobby_Tree_Items(data)
 
                 case "Join_Lobby":
                     print(f"Received call to join lobby, changing current widget: {data}")
@@ -95,14 +90,16 @@ class Client:
                     print(f"Received call to leave lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_List_Page)
 
-                #Data = lobby_id
-                case "Remove_Lobby":
-                    self.gui.Remove_Lobby_Tree_Item(data)
+                case "Update_Lobby":
+                    self.gui.Add_Player_Info_Items(data)
 
                 #Data = Lobby.Get_List()
                 case "Request_Lobbies":
-                    for value in data.values():
-                        self.gui.Add_Lobby_Tree_Item(value)
+                    #TODO Also needs to update and remove lobbies.
+                    # or just redo whole dict
+                    self.gui.Lobby_Tree.clear()
+                    for key, value in data.items():
+                        self.gui.Add_Lobby_Tree_Items(value)
                 
                 case "Ping":
                     print(f"Received Ping from the server, sending it back: {message}")
@@ -126,6 +123,19 @@ class Client:
 
                 case _:
                     print(f"Invalid API {message}")
+
+                    """
+                #These are useless for now
+                #Data = lobby_id
+                case "Remove_Lobby":
+                    self.gui.Remove_Lobby_Tree_Item(data)
+
+                #Data = lobby [id, players, type, live]
+                case "Update_Lobby":
+                    print(f"Received call to update lobby: {data}")
+                    self.gui.Update_Lobby_Tree_Item(data)
+                    """
+
 
     def StartListening(self):
         if self.sock:

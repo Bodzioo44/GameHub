@@ -105,6 +105,34 @@
    <property name="currentIndex">
     <number>0</number>
    </property>
+   <widget class="QWidget" name="Connection_Page">
+    <widget class="QPushButton" name="Offline">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>90</y>
+       <width>271</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Offline</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Online">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>170</y>
+       <width>271</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Online</string>
+     </property>
+    </widget>
+   </widget>
    <widget class="QWidget" name="Lobby_List_Page">
     <widget class="QTreeWidget" name="Lobby_Tree">
      <property name="geometry">
@@ -265,7 +293,18 @@
      </property>
     </widget>
    </widget>
-   <widget class="QWidget" name="Game_Page"/>
+   <widget class="QWidget" name="Game_Page">
+    <widget class="QOpenGLWidget" name="openGLWidget">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>481</width>
+       <height>451</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
   </widget>
  </widget>
  <resources/>

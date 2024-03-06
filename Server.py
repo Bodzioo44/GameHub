@@ -69,87 +69,54 @@ class Server:
 
     #whole API thingymajiggy
 
-    def Message_Handler(self, message, sock):
-        player_name = self.player_list[sock].name #name of the client we are handling
-        player = self.player_list[sock] #Player object we are handling
-        
+    def Message_Handler(self, message, current_sock):
+        current_player = self.player_list[current_sock] #Player object we are handling
+        current_lobby = current_player.lobby
         for api_id, data in message.items():
             match api_id:
-                #data = (game_update_data)
-                case "Game_Update":
-                    lobby = player.lobby
-                    if lobby and lobby.live:
-                        players_to_send = lobby.Other_Players(player)
-                        for player in players_to_send:
-                            self.Send(player.sock, {"Game_Update":data})
-                    else:
-                        return_dict = {"Message":["Join or start a lobby first"]}
-                        self.Send(sock, return_dict)
-                        
-                case "Request_Game_History":
-                    lobby = player.lobby
-                    return_dict = {"Request_Game_History":lobby.Request_Game_History(data)}
-                    self.Send(sock, return_dict)
-                
-                case "Message":
-                    print(f"Message(s) Received from {player_name}: ", end="")
-                    #if type(data) == list:
-                    for message in data:
-                        print(message)
-                    #else:
-                    #    print(data)
-                    #    raise "some data was sent as a single string, not in a list"
-                    
                 case "Request_Lobbies":
-                    new_list = {}
-                    for key, value in self.lobby_list.items():
-                        new_list.update({key:value.Get_List()})
-                    return_message = {"Request_Lobbies":new_list}
-                    self.Send(sock, return_message)
+                    return_dict = {"Request_Lobbies":self._Generate_Lobby_Data_List()}
+                    self.Send(current_sock, return_dict)
 
                 #data = (lobby_type, lobby_size)
+                #TODO add Game_Type enum with sizes
                 case "Create_Lobby":
-                    if player.Get_Lobby():
+                    if current_lobby:
                         return_dict = {"Message":["Cant create a lobby while in another lobby."]}
                     else:
                         lobby_id = self.Get_Lobby_ID()
                         lobby_type, lobby_size = data
-                        new_lobby = Lobby(lobby_type, lobby_size, lobby_id, player)
+                        new_lobby = Lobby(lobby_type, lobby_size, lobby_id, current_player)
                         self.lobby_list.update({lobby_id:new_lobby})
-                        return_dict = {"Message":[f"Joined lobby {lobby_id}"],
-                                       "Create_Lobby":new_lobby.Get_List()
-                                          }
-                    self.Send(sock, return_dict)
+                        return_dict = {"Message":[f"Joined lobby {lobby_id}."],
+                                       "Create_Lobby":new_lobby.Get_List()}
+                    self.Send(current_sock, return_dict)
 
                 #data = lobby_id
-                #if correct sends everyone in a lobby info who joined
                 case "Join_Lobby":
-                    if data in list(self.lobby_list.keys()): #checks if lobby exists
+                    if data in self.lobby_list.keys(): #checks if lobby exists
                         lobby = self.lobby_list[data] 
-                        #Lobby actions should return whole dict with message and data
-                        for key, value in lobby.Add_Player(player).items():
+                        for key, value in lobby.Join(current_player).items(): #Lobby actions should return whole dict with message and data
                             self.Send(key.sock, value)
                     else:
-                        return_message = {"Message":["Invalid lobby id"]}
-                        self.Send(sock, return_message)
+                        return_dict = {"Message":["Invalid lobby id"]}
+                        self.Send(current_sock, return_dict)
 
+                #messages other players that someone left
+                #sends current lobby list to the current_player.
                 case "Leave_Lobby":
-                    if player.lobby:
-                        lobby = player.lobby
-                        lobby_id = lobby.id
-
-                        if return_dict := lobby.Remove_Player(player):
+                    if current_lobby:
+                        
+                        if return_dict := current_lobby.Remove_Player(player):
                             for key, value in return_dict:
                                 self.Send(key.sock, value)
+                            self.Send(current_sock, {"Leave_Lobby":self._Generate_Lobby_Data_List()})
                         else:
-                            #For now its being sent only for the last player inside lobby.
-
-                            self.Send(sock, {"Remove_Lobby":lobby_id})
                             del self.lobby_list[lobby_id]
 
                     else:
-                        return_message = {"Message":["Player not in a lobby"]}
-                        self.Send(sock, return_message)
+                        return_dict = {"Message":["Player not in a lobby"]}
+                        self.Send(current_sock, return_dict)
                         
                 case "Start_Lobby":
                     lobby = player.lobby
@@ -164,30 +131,47 @@ class Server:
 
                         else:
                             return_dict
-                            self.Send(sock, return_messages)
+                            self.Send(current_sock, return_messages)
                     else:
                         return_messages = ["Not inside a lobby"]
                         return_dict = {"Message":return_messages}
-                        self.Send(sock, return_dict)
+                        self.Send(current_sock, return_dict)
 
-                #data = [Player_name: message]
+                case "Game_Update":
+                    lobby = player.lobby
+                    if lobby and lobby.live:
+                        players_to_send = lobby.Other_Players(player)
+                        for player in players_to_send:
+                            self.Send(player.sock, {"Game_Update":data})
+                    else:
+                        return_dict = {"Message":["Join or start a lobby first"]}
+                        self.Send(current_sock, return_dict)
+                        
+                case "Request_Game_History":
+                    lobby = player.lobby
+                    return_dict = {"Request_Game_History":lobby.Request_Game_History(data)}
+                    self.Send(current_sock, return_dict)
+
                 case "Lobby_Chat_Box":
-                    if current_lobby := player.Get_Lobby():
+                    if current_lobby := current_player.Get_Lobby():
                         self.Send_Lobby(current_lobby, {api_id:data})
                     else:
-                        self.Send(sock, {api_id:["Join a Lobby First!"]})
+                        self.Send(current_sock, {api_id:["Join a Lobby First!"]})
 
-                #data = [Player_name: message]
                 case "Global_Chat_Box":
                     self.Send_All({api_id:data})
-                        
-                case "Ping":
-                    self.pinged_conns.remove(sock)
-                    print(f"{player_name} has responded to the ping.")
 
+                case "Message":
+                    print(f"Message(s) Received from {current_player.name}: ", end="")
+                    for message in data:
+                        print(message)
+
+                case "Ping":
+                    self.pinged_conns.remove(current_sock)
+                    print(f"{current_player.name} has responded to the ping.")
 
                 case _:
-                    print("api doesnt match, whoops")
+                    print(f"Invalid API id!: {api_id}")
 
 
     def Listen_For_Connections(self):
@@ -292,6 +276,13 @@ class Server:
     def Send_All(self, message:dict):
         for key in self.player_list.keys():
             self.Send(key, message)
+
+    def _Generate_Lobby_Data_List(self):
+            lobby_dict_values = {}
+            for key, value in self.lobby_list.items():
+                lobby_dict_values.update({key:value.Get_List()}) #Get_List() or Get_Dict()?
+            #return_dict = {"Request_Lobbies":lobby_dict_values}
+            return lobby_dict_values
 
     #Pings the client
     def Ping(self, conn: socket.socket):
