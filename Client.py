@@ -7,15 +7,13 @@ import sys
 from Checkers.Game import Game as Checkers_Game
 from Chess.Game import Game as Chess_Game
 from Assets.constants import Color
-#from PyQtMenu_v2 import MainWindow
-
-
 
 class Client:
-    def __init__(self, name: str, server: str, port:int, gui):
+    def __init__(self, name: str, server: str, port:int, gui = None):
         self.server = server
         self.port = port
-        self.gui = gui
+        if gui:
+            self.gui = gui
         self.name = name
         self.addr = (server, port)
         self.sock = None
