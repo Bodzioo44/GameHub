@@ -8,7 +8,6 @@ from Client import Client
 #TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
 #TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
 #TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
-#TODO Add another stackedwidget window for connecting/reconnecting?
 class MainWindow(QWidget, Ui_Menu):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -42,6 +41,8 @@ class MainWindow(QWidget, Ui_Menu):
 
     def Offline_Mode_Button(self):
         pass
+    
+    #TODO add whole connection check and message box output before switching to lobby list page widget
     def Online_Mode_Button(self):
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
@@ -66,16 +67,15 @@ class MainWindow(QWidget, Ui_Menu):
     #CREATE LOBBY PAGE
 
     def Exit_From_Lobby_Creation_Button(self):
-        self.Select_Game_Type_List.setCurrentItem(None)
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
     def Chess_2_Button(self):
         self.client.Send({"Create_Lobby":("Chess_2", 2)})
-        self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
+        #self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
 
     def Checkers_2_Button(self):
         self.client.Send({"Create_Lobby":("Checkers_2", 2)})
-        self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
+        #self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
 
 
     def Leave_Lobby_Button(self):
@@ -87,7 +87,7 @@ class MainWindow(QWidget, Ui_Menu):
     def Start_Lobby_Button(self):
         print("start lobby")
 
-
+    #TODO add self.client check so it doesnt work in offline mode
     def Message_Input_Enter_Button(self):
         message = self.Message_Input.text()
         if message:
@@ -110,19 +110,56 @@ class MainWindow(QWidget, Ui_Menu):
         self.Lobby_Tree.addTopLevelItem(item)
         #self.lobby_list.update({data[0]:item})
 
+
     def Add_Player_Info_Items(self, data):
         self.Player_Info_Tree.clear()
         print(f"Updating QTreeWidget (Player_Info_Tree) with this: {data}")
-        item = QTreeWidgetItem()
-        for i, value in enumerate(data):
-            item.setText(i, str(value))
-        self.Player_Info_Tree.addTopLevelItem(item)
-        #self.player_list.update({data[0]:item})
+        for player_info in data:
+            item = QTreeWidgetItem()
+            for i, value in enumerate(player_info):
+                item.setText(i, str(value))
+            self.Player_Info_Tree.addTopLevelItem(item)
+
+
+    #TODO add flashing tabs on new message (in the far future)
+    def Update_Global_Chat(self, data):
+        for message in data:
+            self.Global_Chat_Box.append(message)
+        self.Global_Chat_Box.verticalScrollBar().setValue(self.Global_Chat_Box.verticalScrollBar().maximum())
+        self.Message_Input.clear()
+    
+    def Update_Lobby_Chat(self, data):
+        for message in data:
+            self.Lobby_Chat_Box.append(message)
+        self.Lobby_Chat_Box.verticalScrollBar().setValue(self.Lobby_Chat_Box.verticalScrollBar().maximum())
+        self.Message_Input.clear()       
+
+
+    def Assign_Client(self):
+        #self.client = Client("Bodzioo", "83.22.224.227", 4444, self)
+        if len(sys.argv) == 3:
+            self.client = Client(sys.argv[1], sys.argv[2], 4444, self)
+        else:
+            self.client = Client("Bodzioo", '127.0.0.1', 4444, self)
+        self.client.Connect()
+        listening_thread = threading.Thread(target = lambda: self.client.StartListening())
+        listening_thread.start()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.Assign_Client()
+    window.show()
+    #print("after gui closed")
+    sys.exit(app.exec_())
+
+
+
+
 
 
 
     """
-
     #After data needs to be dict, and based on keys edit values
     #IDk about above, but maybe merge these 2?
     def Update_Lobby_Tree_Item(self, data):
@@ -140,36 +177,3 @@ class MainWindow(QWidget, Ui_Menu):
         del self.lobby_list[data]
     #TODO fuck removing items, just redo whole table on every request? YAP
     """
-
-    def Update_Global_Chat(self, data):
-        for message in data:
-            self.Global_Chat_Box.append(message)
-        self.Global_Chat_Box.verticalScrollBar().setValue(self.Global_Chat_Box.verticalScrollBar().maximum())
-        self.Message_Input.clear()
-    
-    def Update_Lobby_Chat(self, data):
-        for message in data:
-            self.Lobby_Chat_Box.append(message)
-        self.Lobby_Chat_Box.verticalScrollBar().setValue(self.Lobby_Chat_Box.verticalScrollBar().maximum())
-        self.Message_Input.clear()       
-
-
-
-    #Add another stacked widget for assigning client (connecting/disconnecting)
-    #Always pass gui while creating client
-    def Assign_Client(self):
-        #self.client = Client("Bodzioo", "83.22.225.247", 4444, self)
-        if len(sys.argv) == 3:
-            self.client = Client(sys.argv[1], sys.argv[2], 4444, self)
-        else:
-            self.client = Client("Bodzioo", '127.0.0.1', 4444, self)
-        self.client.Connect()
-        listening_thread = threading.Thread(target = lambda: self.client.StartListening())
-        listening_thread.start()
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.Assign_Client()
-    window.show()
-    sys.exit(app.exec_())

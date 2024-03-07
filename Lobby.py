@@ -2,18 +2,18 @@ from Assets.constants import Color
 
 
 class Lobby:
-    def __init__(self, type:str, size:int, id:int, player):
+    def __init__(self, type:str, size:int, id:int):
         self.type = type
         self.size = size
         self.live = False
         self.id = id
         self.colors = {}
         
-        self.players = [player]
-        self.player_count = 1
-        self.Assign_Color(player)
-        self.host = player
-        player.Join_Lobby(self)
+        self.players = []
+        self.player_count = 0
+        #self.Assign_Color(player)
+        self.host = None
+        #player.Join_Lobby(self)
         
         self.game_history = {}
 
@@ -41,23 +41,37 @@ class Lobby:
             pp.append(player.name)
         Info = [self.id, pp, self.type, self.live]
         return Info
-
+    
+    #returns list with lobby values for create lobby method
+    def _get_loby_info(self) -> list:
+        return [self.id, self.type, self.size, self.live]
+    
+    #returns list with players as a key and their color as a value
+    def _get_players_info(self) -> list:
+        players_info_dict = []
+        for player in self.players:
+            players_info_dict.append(player.get_info())
+        return players_info_dict
+    
     def _Add_Player(self, player):
+        if not self.host:
+            self.host = player
         self.player_count += 1
         self.players.append(player)
         self.Assign_Color(player)
         player.Join_Lobby(self)
-        print(f"{player} has joned lobby {self.id}")
+        print(f"{player.name} has joined lobby {self.id}")
 
     def _Remove_Player(self, player):
         self.player_count -= 1
         self.players.remove(player)
         del self.colors[player]
         player.Leave_Lobby()
-        print(f"{player} has left lobby {self.id}")
+        print(f"{player.name} has left lobby {self.id}")
 
     #Lobby should return finished dict with data assigned for each player
     #for example: {Player_to_send: dict with multiple entries}
+    #this should return both _player_info and _lobby_info on join_lobby, and only _player_info on update_lobby
     def Join(self, player):
         return_dict = {}
         if self.live:
@@ -72,17 +86,13 @@ class Lobby:
             self._Add_Player(player)
 
             for p in self.players:
-                return_dict.update({p:{"Message":[f"{player.name} has joined the lobby"]}})
-            return_dict[player].update({"Join_Lobby":self.Get_List()})
+                return_dict.update({p:{"Message":[f"{player.name} has joined the lobby"],
+                                       "Update_Lobby":self._get_players_info()}})
+            return_dict[player].update({"Join_Lobby":self._get_players_info()})
         print(f"Returning this: {return_dict}")
         return return_dict
-        
-    #cant leave while game is on? idk 
-    # 1- Cant leave while game is live.
-    # 2- if host changed send additional message
-    # 3- if lobby is empty, remove it (outside check)
-    # 4- if player left, send to everyone and update lobby
-
+    
+    #TODO Maybe move the return_dict generation in case of empty lobby here?
     def Leave(self, player):
         return_dict = {}
         if self.live:
@@ -100,20 +110,24 @@ class Lobby:
             
             for p in self.Other_Players(player):
                 return_dict.update({p:{"Message":message_list,
-                                       "Update_Lobby":self.Get_List()}})
+                                       "Update_Lobby":self._get_players_info()}})
             return return_dict
         else:
             return False
 
 
-    def Start(self, player):
+    def start(self, player) -> dict:
+        return_dict = {}
         if player != self.host:
-            return "Only host can start the game"
+            return_dict.update({player:{"Message":"Only host can start the game"}})
         elif self.player_count == self.size:
             self.live = True
-            return "Starting the lobby"
+            for p in self.players:
+                return_dict.update({p:{"Message":f"Starting the {self.type} with id: {self.id} game as {p.color} player.",
+                                       "Start_Lobby":0}})
         else:
-            return "Lobby is not filled"
+             return_dict.update({player:{"Message":"Lobby is not filled"}})
+        return return_dict
 
 
     def Other_Players(self, current_player):
@@ -143,7 +157,7 @@ class Lobby:
     #exit lobby whenever its not started? keep the player after the game started?
     def Disconnect_Player(self, player):
         if not self.live:
-            self.Remove_Player(player)
+            self._Remove_Player(player)
         else:
             #do the disconnect thingy
             pass

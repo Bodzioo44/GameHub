@@ -48,7 +48,7 @@ class Client:
             case "Chess_2":
                 return Chess_Game(2)
 
-    def Receive(self):
+    def Receive(self) -> dict:
         message = self.sock.recv(self.buff_size).decode(self.format)
         if message:
             message = json.loads(message)
@@ -58,7 +58,7 @@ class Client:
             raise socket.error("Received empty message")
 
     #TODO this needs to edit gui elements
-    def Message_Handler(self, message):
+    def Message_Handler(self, message:dict):
         for api_id, data in message.items():
             #print(f"Received: {api_id}:{data}")
             match api_id:
@@ -80,11 +80,14 @@ class Client:
                 #Data = lobby [id, players, type, live]
                 case "Create_Lobby":
                     print(f"Received call to create lobby: {data}")
-                    self.gui.Add_Lobby_Tree_Items(data)
+                    #self.gui.Add_Player_Info_Items(data)
+                    #self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
+                    #self.gui.Add_Lobby_Tree_Items(data)
 
                 case "Join_Lobby":
                     print(f"Received call to join lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Page)
+                    self.gui.Add_Player_Info_Items(data)
 
                 case "Leave_Lobby":
                     print(f"Received call to leave lobby, changing current widget: {data}")
@@ -159,6 +162,19 @@ class Client:
             self.game_thread.join()
             print("Keyboard Interrupt")
 
+if __name__ == '__main__':
+    import threading
+    #Client1 = Client('Bodzioo','192.168.1.14', 4444)
+    Client1 = Client(sys.argv[1],sys.argv[2], 4444)
+    Client1.Connect()
+    #t1 = threading.Thread(target=Test, args=(Client1,), daemon=True)
+    #t1.start()
+    Client1.StartListening()
+    #t1.join(0.1)
+    
+    
+    
+"""
 def Test(Client:Client):
     while True:
         message = input()
@@ -175,12 +191,4 @@ def Test(Client:Client):
                 Client.Send({"Start_Lobby":0})
 
 
-if __name__ == '__main__':
-    import threading
-    #Client1 = Client('Bodzioo','192.168.1.14', 4444)
-    Client1 = Client(sys.argv[1],sys.argv[2], 4444)
-    Client1.Connect()
-    t1 = threading.Thread(target=Test, args=(Client1,), daemon=True)
-    t1.start()
-    Client1.StartListening()
-    t1.join(0.1)
+"""
