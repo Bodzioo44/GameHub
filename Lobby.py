@@ -15,6 +15,7 @@ class Lobby:
         self.host = None
         
         self.game_history = {}
+        self.disconnected_players = []
 
 
     #__dict__?
@@ -154,28 +155,34 @@ class Lobby:
         turn = len(self.game_history)
         self.game_history.update({turn:game_update})
         
-    def Request_Game_History(self, turn):
+    def Request_Game_History(self, turn:int) -> dict:
         #returns turns from input, to the end
         part_dict = {k: self.game_history[k] for k in list(range(turn, len(self.game_history)))}
         return part_dict
 
     #does lobby needs to do anything with disconnected player? should sending info about disconnecting be here?
     #exit lobby whenever its not started? keep the player after the game started?
+    #called by player, what to do whenever player disconnects
     def Disconnect_Player(self, player):
-        if not self.live:
-            self._Remove_Player(player)
-        else:
-            #do the disconnect thingy
+        return_dict = {}
+        if self.live:
+            #TODO LOBBBY IS LIVE AND PLAYER DISCONNECTED
+            #add DC'd player to a list
+            self.disconnected_players.append(player)
+            #add some reconnect method that will match with disconnected players
+            #add some bool anyone_can_connect to relist lobby, and maybe change self.live for lobby relisting??
+            #changing self.live is not a good idea imo.
             pass
-
-
-if __name__ == "__main__":
-    from Player import Player
-    p1 = Player("Bodzioo", 2)
-    p2 = Player("House", 4)
-    l1 = Lobby("Chess_4", 4)
-    l1.Add_Player(p1)
-    l1.Add_Player(p2)
-    l1.Add_Player(p1)
-    #l1.Remove_Player(p1)
-    print(l1.Get_Dict())
+        else:
+            return_dict = self.Leave(player)
+        return return_dict
+    
+    def Reconnect_Player(self, player):
+        return_dict = {}
+        #no idea whats supposed to be here
+        if self.live:
+            #whole check if player CAN reconnect
+            pass
+        else:
+            return_dict = self.Join(player)
+        return return_dict

@@ -21,7 +21,6 @@ class Server:
         self.player_list = {} #{sock : Player}
         self.disconnected_player_list = {} #{name:Player}
         self.pinged_conns = []
-        #self.game_types = {"Chess_4" : 4, "Chess_2" : 2, "Checkers" : 2} #Maybe replace with enum?
         self.debugg = True
         
         #Maybe this needs to be called again in case of server restart?
@@ -39,7 +38,7 @@ class Server:
             self.inputs = [self.sock]
             self.linux = False
             print("sys.stdin is not supported on this OS, starting separate thread for terminal inputs...")
-            Input_Thread = threading.Thread(target = self.Terminal_Input_Thread, args = (), daemon=True)
+            Input_Thread = threading.Thread(target = lambda:self.Terminal_Input_Thread(), daemon=True)
             Input_Thread.start()
 
     def Start_Server(self):
@@ -49,17 +48,20 @@ class Server:
     
         
     #TODO add check if player was the last player inside the lobby, and if so, delete the lobby
-    def Disconnect(self, sock):
+    def Disconnect(self, sock: socket.socket):
         player = self.player_list[sock]
-        player.Disconnect()
+        lobby = player.lobby
         self.disconnected_player_list.update({player.name:player})
         del self.player_list[sock]
-        sock.close()
-        print(f"disconnecting {player.name} because of socket error")
+
+        if return_dict := lobby.Disconnect_Player(player):
+            for key, value in return_dict.items():
+                self.Send(key.sock, value)
+        else:
+            del self.lobby_list[lobby.id]
 
     #assuming that player is inside disconnected list, reconnect it with passed sock
     def Reconnect(self, name: str, sock: socket.socket):
-        
         player = self.disconnected_player_list[name] #player that we are reconnecting
         player.Reconnect(sock)
         current_time = strftime("%H:%M:%S", localtime())
@@ -68,6 +70,8 @@ class Server:
         del self.disconnected_player_list[name]
         self.player_list.update({sock:player})
         print(f"Reconnected {player.name}")
+        #TODO Above only reconnects player, add lobby reconnect below
+
 
 
     #whole API thingymajiggy
@@ -81,8 +85,6 @@ class Server:
                     return_dict = {"Request_Lobbies":self._Generate_Lobby_Data_List()}
                     self.Send(current_sock, return_dict)
 
-                #data = (lobby_type, lobby_size)
-                #TODO add Game_Type enum with sizes
                 #TODO if lobby creation is successful, update all other players about it
                 case "Create_Lobby":
                     if current_lobby:
@@ -276,6 +278,8 @@ class Server:
         for key in self.player_list.keys():
             self.Send(key, message)
 
+
+    #TODO change it, so it only returns NOT live lobbies
     def _Generate_Lobby_Data_List(self) -> dict:
             lobby_list_values = []
             for lobby in self.lobby_list.values():
