@@ -1,19 +1,18 @@
-from Assets.constants import Color
+from Assets.constants import Player_Colors, Game_Type
+
 
 
 class Lobby:
-    def __init__(self, type:str, size:int, id:int):
-        self.type = type
-        self.size = size
+    def __init__(self, game_type:Game_Type, id:int):
+        self.type = game_type.name
+        self.size = game_type.value
         self.live = False
         self.id = id
         self.colors = {}
         
         self.players = []
         self.player_count = 0
-        #self.Assign_Color(player)
         self.host = None
-        #player.Join_Lobby(self)
         
         self.game_history = {}
 
@@ -42,11 +41,14 @@ class Lobby:
         Info = [self.id, pp, self.type, self.live]
         return Info
     
+    #TODO send this to everyone who join along with _get_players_info
+    #or maybe merge them into one method? _get_lobby_info returns static lobby data
     #returns list with lobby values for create lobby method
-    def _get_loby_info(self) -> list:
-        return [self.id, self.type, self.size, self.live]
+    #kinda inconsistent with _get_players_info but whatever
+    def _get_lobby_info(self) -> str:
+        return f"ID: {self.id} Type: {self.type} Size: {self.size} Live:{self.live}"
     
-    #returns list with players as a key and their color as a value
+    #returns list with players info also as a list [[]]
     def _get_players_info(self) -> list:
         players_info_dict = []
         for player in self.players:
@@ -58,7 +60,7 @@ class Lobby:
             self.host = player
         self.player_count += 1
         self.players.append(player)
-        self.Assign_Color(player)
+        self._assign_color(player)
         player.Join_Lobby(self)
         print(f"{player.name} has joined lobby {self.id}")
 
@@ -88,7 +90,8 @@ class Lobby:
             for p in self.players:
                 return_dict.update({p:{"Message":[f"{player.name} has joined the lobby"],
                                        "Update_Lobby":self._get_players_info()}})
-            return_dict[player].update({"Join_Lobby":self._get_players_info()})
+                
+            return_dict[player].update({"Join_Lobby":(self._get_players_info(),self._get_lobby_info())})
         print(f"Returning this: {return_dict}")
         return return_dict
     
@@ -119,14 +122,14 @@ class Lobby:
     def start(self, player) -> dict:
         return_dict = {}
         if player != self.host:
-            return_dict.update({player:{"Message":"Only host can start the game"}})
+            return_dict.update({player:{"Message":["Only host can start the game"]}})
         elif self.player_count == self.size:
             self.live = True
             for p in self.players:
-                return_dict.update({p:{"Message":f"Starting the {self.type} with id: {self.id} game as {p.color} player.",
+                return_dict.update({p:{"Message":[f"Starting the {self.type} with id: {self.id} game as {p.color.name} player."],
                                        "Start_Lobby":0}})
         else:
-             return_dict.update({player:{"Message":"Lobby is not filled"}})
+             return_dict.update({player:{"Message":["Lobby is not filled"]}})
         return return_dict
 
 
@@ -137,11 +140,14 @@ class Lobby:
                 players_to_send.append(player)
         return players_to_send
     
-    def Assign_Color(self, player):
+
+    #TODO later on specify available colors based on game played
+    def _assign_color(self, player):
         taken_colors = self.colors.values()
-        for color in Color:
+        for color in Player_Colors:
             if color not in taken_colors:
                 self.colors.update({player:color})
+                player.color = color
                 break
 
     def Update_Game_History(self, game_update:dict):

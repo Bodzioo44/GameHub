@@ -96,14 +96,14 @@
   <widget class="QStackedWidget" name="Stacked_Widget">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>10</x>
      <y>10</y>
      <width>501</width>
      <height>461</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="Connection_Page">
     <widget class="QPushButton" name="Offline">
@@ -234,8 +234,8 @@
     <widget class="QTreeWidget" name="Player_Info_Tree">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>10</y>
+       <x>30</x>
+       <y>70</y>
        <width>371</width>
        <height>321</height>
       </rect>
@@ -250,6 +250,19 @@
        <string>Color</string>
       </property>
      </column>
+    </widget>
+    <widget class="QLabel" name="Lobby_Info">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>15</y>
+       <width>341</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>AYOO, HOW DID WE GET HERE?</string>
+     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="Create_Lobby_Page">

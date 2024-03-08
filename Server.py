@@ -6,6 +6,7 @@ import platform
 
 from Player import Player
 from Lobby import Lobby
+from Assets.constants import Game_Type
 from time import strftime, localtime
 
 class Server:
@@ -20,7 +21,7 @@ class Server:
         self.player_list = {} #{sock : Player}
         self.disconnected_player_list = {} #{name:Player}
         self.pinged_conns = []
-        self.game_types = {"Chess_4" : 4, "Chess_2" : 2, "Checkers" : 2} #Maybe replace with enum?
+        #self.game_types = {"Chess_4" : 4, "Chess_2" : 2, "Checkers" : 2} #Maybe replace with enum?
         self.debugg = True
         
         #Maybe this needs to be called again in case of server restart?
@@ -47,6 +48,7 @@ class Server:
         self.Listen_For_Connections()
     
         
+    #TODO add check if player was the last player inside the lobby, and if so, delete the lobby
     def Disconnect(self, sock):
         player = self.player_list[sock]
         player.Disconnect()
@@ -67,6 +69,7 @@ class Server:
         self.player_list.update({sock:player})
         print(f"Reconnected {player.name}")
 
+
     #whole API thingymajiggy
     #If possible lobby methods should return dict with api calls assigned to each player
     def Message_Handler(self, message, current_sock):
@@ -80,19 +83,20 @@ class Server:
 
                 #data = (lobby_type, lobby_size)
                 #TODO add Game_Type enum with sizes
-                #TODO if lobby creation is successful, update other players about it
+                #TODO if lobby creation is successful, update all other players about it
                 case "Create_Lobby":
                     if current_lobby:
                         return_dict = {"Message":["Cant create a lobby while in another lobby."]}
                     else:
                         lobby_id = self.Get_Lobby_ID()
-                        lobby_type, lobby_size = data
-                        new_lobby = Lobby(lobby_type, lobby_size, lobby_id)
-                        
-                        self.lobby_list.update({lobby_id:new_lobby})
-                        #return_dict = {"Message":[f"Joined lobby {lobby_id}."],
-                        #               "Create_Lobby":new_lobby.Join()}
-                        return_dict = new_lobby.Join(current_player)[current_player]
+                        try:
+                            game_type = getattr(Game_Type, data)
+                            new_lobby = Lobby(game_type, lobby_id)
+                            self.lobby_list.update({lobby_id:new_lobby})
+                            return_dict = new_lobby.Join(current_player)[current_player]
+                        except AttributeError:
+                            return_dict = {"Message":["Invalid lobby type"]}
+
                     self.Send(current_sock, return_dict)
 
                 #data = lobby_id
@@ -239,18 +243,18 @@ class Server:
             print("Keyboard Interrupt")
             self.Running = False
 
-    #just because Windows is retarded
+    #just because Windows is retarded, wont matter in the final usecase
     def Terminal_Input_Thread(self):
         while self.Running:
             #TODO somehow move this line to the bottom of the terminal feed (different for windows/linux? idk yet)
-            #TODO add eval() method to write code directly into feed? 100% secure
-            #just leave it for the end
             try:
                 message = input("Send to all clients (in form of api): ")
                 if self.Running:
-                    self.Send_All(message)
+                    eval(message)
                 else:
                     print("Server is down, restart it first")
+            except NameError:
+                print("Invalid call, try again")
             except EOFError:
                 print("Shutting down Terminal Input Thread...")
             except json.decoder.JSONDecodeError:
@@ -273,11 +277,10 @@ class Server:
             self.Send(key, message)
 
     def _Generate_Lobby_Data_List(self) -> dict:
-            lobby_dict_values = {}
-            for key, value in self.lobby_list.items():
-                lobby_dict_values.update({key:value.Get_List()}) #Get_List() or Get_Dict()?
-            #return_dict = {"Request_Lobbies":lobby_dict_values}
-            return lobby_dict_values
+            lobby_list_values = []
+            for lobby in self.lobby_list.values():
+                lobby_list_values.append(lobby.Get_List())
+            return lobby_list_values
 
     #Pings the client
     def Ping(self, conn: socket.socket):
@@ -302,7 +305,7 @@ class Server:
                 return key
         return False
     
-    #Generate unique lobby id
+    #Generate unique lobby id, there probably is more efficient way to do this
     def Get_Lobby_ID(self) -> int:
         i = 1
         acitve_lobbies = list(self.lobby_list.keys())
@@ -318,4 +321,3 @@ if __name__ == "__main__":
         ip = '192.168.1.14'
     Server1 = Server(ip, 4444)
     Server1.Start_Server()
-    

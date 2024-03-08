@@ -6,7 +6,7 @@ import sys
 
 from Checkers.Game import Game as Checkers_Game
 from Chess.Game import Game as Chess_Game
-from Assets.constants import Color
+from Assets.constants import Player_Colors
 
 class Client:
     def __init__(self, name: str, server: str, port:int, gui = None):
@@ -35,10 +35,12 @@ class Client:
         #print(f"Sending: {message}")
         self.sock.send(message.encode(self.format))
         
+    #TODO find a way to close sockets properly
     def Disconnect(self):
         self.sock.close()
         self.sock = None
-        
+
+    #TODO modify with enum, add optional color selection
     def Pick_Game_Type(self, type):
         match type:
             case "Chess_4":
@@ -70,24 +72,18 @@ class Client:
                 
                 #data = lobby_type, player_color
                 case "Start_Lobby":
-                    print("we got here?")
-                    lobby_type, player_color = data
-                    player_color = Color(tuple(player_color))
-                    self.game = self.Pick_Game_Type(lobby_type)
-                    self.game.Assign_Online_Players(player_color, self)
-                    self.game_thread = threading.Thread(target = lambda: self.game.Start()).start()
-        
-                #Data = lobby [id, players, type, live]
-                case "Create_Lobby":
-                    print(f"Received call to create lobby: {data}")
-                    #self.gui.Add_Player_Info_Items(data)
-                    #self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
-                    #self.gui.Add_Lobby_Tree_Items(data)
+                    print("we would have started the game.")
+                    #lobby_type, player_color = data
+                    #player_color = Color(tuple(player_color))
+                    #self.game = self.Pick_Game_Type(lobby_type)
+                    #self.game.Assign_Online_Players(player_color, self)
+                    #self.game_thread = threading.Thread(target = lambda: self.game.Start()).start()
 
                 case "Join_Lobby":
                     print(f"Received call to join lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Page)
-                    self.gui.Add_Player_Info_Items(data)
+                    self.gui.Add_Player_Info_Items(data[0])
+                    self.gui.Lobby_Info.setText(data[1])
 
                 case "Leave_Lobby":
                     print(f"Received call to leave lobby, changing current widget: {data}")
@@ -96,13 +92,8 @@ class Client:
                 case "Update_Lobby":
                     self.gui.Add_Player_Info_Items(data)
 
-                #Data = Lobby.Get_List()
                 case "Request_Lobbies":
-                    #TODO Also needs to update and remove lobbies.
-                    # or just redo whole dict
-                    self.gui.Lobby_Tree.clear()
-                    for key, value in data.items():
-                        self.gui.Add_Lobby_Tree_Items(value)
+                    self.gui.Add_Lobby_Tree_Items(data)
                 
                 case "Ping":
                     print(f"Received Ping from the server, sending it back: {message}")
@@ -126,19 +117,6 @@ class Client:
 
                 case _:
                     print(f"Invalid API {message}")
-
-                    """
-                #These are useless for now
-                #Data = lobby_id
-                case "Remove_Lobby":
-                    self.gui.Remove_Lobby_Tree_Item(data)
-
-                #Data = lobby [id, players, type, live]
-                case "Update_Lobby":
-                    print(f"Received call to update lobby: {data}")
-                    self.gui.Update_Lobby_Tree_Item(data)
-                    """
-
 
     def StartListening(self):
         if self.sock:
@@ -171,24 +149,3 @@ if __name__ == '__main__':
     #t1.start()
     Client1.StartListening()
     #t1.join(0.1)
-    
-    
-    
-"""
-def Test(Client:Client):
-    while True:
-        message = input()
-        match message:
-            case "a":
-                Client.Send({"Create_Lobby":("Checkers_2", 2)})
-            case "b":
-                Client.Send({"Request_Lobbies":0})
-            case "c":
-                Client.Send({"Leave_Lobby":0})
-            case "d":
-                Client.Send({"Join_Lobby":1})
-            case "e":
-                Client.Send({"Start_Lobby":0})
-
-
-"""

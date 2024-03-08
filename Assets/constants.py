@@ -9,11 +9,18 @@ class Color(tuple, Enum):
     GREY = (128, 128, 128)
     RED = (255, 0 , 0)
 
-class Game_Type(Enum):
+class Player_Colors(tuple, Enum):
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
+    ORANGE = (255, 106, 0)
+    BLUE = (1, 255, 12)
+
+class Game_Type(int, Enum):
     Chess_4 = 4
     Checkers_2 = 2
     Chess_2 = 2
-    #maybe?
+
+print(getattr(Game_Type, "Checkers_2"))
 
 #def Dict_Merger(dict_list):
 #    dict3 = {}

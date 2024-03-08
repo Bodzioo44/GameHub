@@ -1,18 +1,13 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QModelIndex
+from PyQt5.QtWidgets import QWidget, QTreeWidgetItem, QApplication, QTextEdit
 from PyQtDesigner_Menu import Ui_Menu
 import threading
 import sys
 from Client import Client
 
-#TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
-#TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
-#TODO ONLY ADD STUFF BASED ON SERVER RETURN MESSAGES
 class MainWindow(QWidget, Ui_Menu):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.setupUi(self)
-
 
         self.Create_Lobby.clicked.connect(self.Create_Lobby_Button)
         self.Join_Lobby.clicked.connect(self.Join_Lobby_Button)
@@ -25,11 +20,7 @@ class MainWindow(QWidget, Ui_Menu):
         self.Update_Lobby_List.clicked.connect(self.Update_Lobby_List_Button)
         self.Online.clicked.connect(self.Online_Mode_Button)
         self.Offline.clicked.connect(self.Offline_Mode_Button)
-
-        #Not needed since QTreeWidget is being redone every time
-        #self.lobby_list = {} # lobby_id:QTreeWidgetItem
-        #self.player_list = {} # player_name:QTreeWidgetItem
-
+        self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
 
 
     """
@@ -49,8 +40,6 @@ class MainWindow(QWidget, Ui_Menu):
     #LOBBY LIST PAGE
 
     def Join_Lobby_Button(self):
-        #SENDS {"Join_Lobby":lobby_id} to the server if lobby is selected
-
         if selected := self.Lobby_Tree.selectedItems():
             print("Sending Join_Lobby request.")
             self.client.Send({"Join_Lobby":int(selected[0].text(0))})
@@ -58,7 +47,6 @@ class MainWindow(QWidget, Ui_Menu):
             print("select a lobby first")
     
     def Create_Lobby_Button(self):
-        #MOVES TO THE CREATE LOBBY PAGE
         self.Stacked_Widget.setCurrentWidget(self.Create_Lobby_Page)
 
     def Update_Lobby_List_Button(self):
@@ -70,22 +58,19 @@ class MainWindow(QWidget, Ui_Menu):
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
     def Chess_2_Button(self):
-        self.client.Send({"Create_Lobby":("Chess_2", 2)})
-        #self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
+        self.client.Send({"Create_Lobby":"Chess_2"})
 
     def Checkers_2_Button(self):
-        self.client.Send({"Create_Lobby":("Checkers_2", 2)})
-        #self.Stacked_Widget.setCurrentWidget(self.Lobby_Page)
+        self.client.Send({"Create_Lobby":"Checkers_2"})
 
 
     def Leave_Lobby_Button(self):
-        #self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
         self.client.Send({"Leave_Lobby":0})
-        print("Sent request to leave lobby")
     
 
     def Start_Lobby_Button(self):
-        print("start lobby")
+        self.client.Send({"Start_Lobby":0})
+        #print("start lobby")
 
     #TODO add self.client check so it doesnt work in offline mode
     def Message_Input_Enter_Button(self):
@@ -94,26 +79,22 @@ class MainWindow(QWidget, Ui_Menu):
             current_message_box = self.Chat_Tab.currentWidget().findChildren(QTextEdit)[0]
             self.client.Send({current_message_box.objectName():[f"{self.client.name}: "+message]})
 
-
-
     """
     CALLED DIRECTLY FROM CLIENT.MESSAGE_HANDLER()
     EDITS GUI BASED ON SERVER RESPONSE
     """
 
-    def Add_Lobby_Tree_Items(self, data):
+    def Add_Lobby_Tree_Items(self, data:list):
         self.Lobby_Tree.clear()
-        print(f"Updating QTreeWidget (Lobby_Tree_) with this: {data}")
         item = QTreeWidgetItem()
-        for i, value in enumerate(data):
-            item.setText(i, str(value))
-        self.Lobby_Tree.addTopLevelItem(item)
-        #self.lobby_list.update({data[0]:item})
+        for lobby_info in data:
+            for i, value in enumerate(lobby_info):
+                item.setText(i, str(value))
+            self.Lobby_Tree.addTopLevelItem(item)
 
 
-    def Add_Player_Info_Items(self, data):
+    def Add_Player_Info_Items(self, data:list):
         self.Player_Info_Tree.clear()
-        print(f"Updating QTreeWidget (Player_Info_Tree) with this: {data}")
         for player_info in data:
             item = QTreeWidgetItem()
             for i, value in enumerate(player_info):
@@ -121,14 +102,19 @@ class MainWindow(QWidget, Ui_Menu):
             self.Player_Info_Tree.addTopLevelItem(item)
 
 
-    #TODO add flashing tabs on new message (in the far future)
-    def Update_Global_Chat(self, data):
+    #TODO this is ugly af, replace it with some kind of label (visual quality improvement)
+    def Add_Lobby_Info_Label(self, data:str):
+        self.Lobby_Info.setText(data)
+
+
+    #TODO add flashing tabs on new message (visual quality improvement)
+    def Update_Global_Chat(self, data:list):
         for message in data:
             self.Global_Chat_Box.append(message)
         self.Global_Chat_Box.verticalScrollBar().setValue(self.Global_Chat_Box.verticalScrollBar().maximum())
         self.Message_Input.clear()
     
-    def Update_Lobby_Chat(self, data):
+    def Update_Lobby_Chat(self, data:list):
         for message in data:
             self.Lobby_Chat_Box.append(message)
         self.Lobby_Chat_Box.verticalScrollBar().setValue(self.Lobby_Chat_Box.verticalScrollBar().maximum())
@@ -145,35 +131,18 @@ class MainWindow(QWidget, Ui_Menu):
         listening_thread = threading.Thread(target = lambda: self.client.StartListening())
         listening_thread.start()
 
+    def closeEvent(self, event):
+        print("GUI Closed, disconnecting from the server...")
+        self.client.Disconnect()
+        event.accept()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     window.Assign_Client()
     window.show()
-    #print("after gui closed")
     sys.exit(app.exec_())
 
 
 
 
-
-
-
-    """
-    #After data needs to be dict, and based on keys edit values
-    #IDk about above, but maybe merge these 2?
-    def Update_Lobby_Tree_Item(self, data):
-        item = self.lobby_list[data[0]]
-        for i, value in enumerate(data):
-            item.setText(i, str(value))
-    
-
-    #TODO fix this finally
-    def Remove_Lobby_Tree_Item(self, data):
-        #self.Lobby_Tree.takeTopLevelItem(self.lobby_index_list.index(data))
-        index = QModelIndex(self.Lobby_Tree).row(self.lobby_list[data])
-        print(f"We would remove some shit: {index}")
-        self.Lobby_Tree.takeTopLevelItem(index)
-        del self.lobby_list[data]
-    #TODO fuck removing items, just redo whole table on every request? YAP
-    """

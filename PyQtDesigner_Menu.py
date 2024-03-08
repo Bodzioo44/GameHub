@@ -41,7 +41,7 @@ class Ui_Menu(object):
         self.Lobby_Chat_Box.setObjectName("Lobby_Chat_Box")
         self.Chat_Tab.addTab(self.Lobby_Chat, "")
         self.Stacked_Widget = QtWidgets.QStackedWidget(Menu)
-        self.Stacked_Widget.setGeometry(QtCore.QRect(0, 10, 501, 461))
+        self.Stacked_Widget.setGeometry(QtCore.QRect(10, 10, 501, 461))
         self.Stacked_Widget.setObjectName("Stacked_Widget")
         self.Connection_Page = QtWidgets.QWidget()
         self.Connection_Page.setObjectName("Connection_Page")
@@ -76,8 +76,11 @@ class Ui_Menu(object):
         self.Start_Lobby.setGeometry(QtCore.QRect(120, 400, 90, 28))
         self.Start_Lobby.setObjectName("Start_Lobby")
         self.Player_Info_Tree = QtWidgets.QTreeWidget(self.Lobby_Page)
-        self.Player_Info_Tree.setGeometry(QtCore.QRect(20, 10, 371, 321))
+        self.Player_Info_Tree.setGeometry(QtCore.QRect(30, 70, 371, 321))
         self.Player_Info_Tree.setObjectName("Player_Info_Tree")
+        self.Lobby_Info = QtWidgets.QLabel(self.Lobby_Page)
+        self.Lobby_Info.setGeometry(QtCore.QRect(40, 15, 341, 31))
+        self.Lobby_Info.setObjectName("Lobby_Info")
         self.Stacked_Widget.addWidget(self.Lobby_Page)
         self.Create_Lobby_Page = QtWidgets.QWidget()
         self.Create_Lobby_Page.setObjectName("Create_Lobby_Page")
@@ -100,7 +103,7 @@ class Ui_Menu(object):
 
         self.retranslateUi(Menu)
         self.Chat_Tab.setCurrentIndex(0)
-        self.Stacked_Widget.setCurrentIndex(0)
+        self.Stacked_Widget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(Menu)
 
     def retranslateUi(self, Menu):
@@ -122,6 +125,7 @@ class Ui_Menu(object):
         self.Start_Lobby.setText(_translate("Menu", "Start Lobby"))
         self.Player_Info_Tree.headerItem().setText(0, _translate("Menu", "Name"))
         self.Player_Info_Tree.headerItem().setText(1, _translate("Menu", "Color"))
+        self.Lobby_Info.setText(_translate("Menu", "AYOO, HOW DID WE GET HERE?"))
         self.Exit_From_Lobby_Creation.setText(_translate("Menu", "Exit"))
         self.Chess_2.setText(_translate("Menu", "Chess_2"))
         self.Checkers_2.setText(_translate("Menu", "Checkers_2"))
