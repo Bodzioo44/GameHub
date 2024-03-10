@@ -1,17 +1,14 @@
-import sys
-
 try:
     import pygame
+    import sys
+    import threading
+    from time import sleep
+    from Assets.constants import Color
+    from Checkers.Board import Board
+    from Checkers.Bot import Bot
 except NameError as error:
-    print(f"Pygame is not installed{error}")
+    print(f"Pygame is not installed or other files are missing. \n{error}")
     sys.exit()
-    
-from Assets.constants import Color
-from Checkers.Board import Board
-from Checkers.Bot import Bot
-
-import threading
-from time import sleep
 
 class Game:
     def __init__(self, board_pixel_size: int):
@@ -27,8 +24,10 @@ class Game:
         self.selected = None
         self.commited = None
         self.turn = Color.WHITE
+        self.turn_counter = 0
         
         self.Board = Board(board_pixel_size)
+        self.client = None
 
 
     def Assign_Online_Players(self, color: Color, client):
@@ -41,6 +40,13 @@ class Game:
     def Assign_Offline_Players(self, player1: int = 6, player2: int = 6):
         self.player1 = player1
         self.player2 = player2
+
+    def Catchup(self, data):
+        #TODO this might not work yet, probably needs some pygame.init() or something
+        
+        for turn in data:
+            self.Receive_Update(turn)
+        self.Start()
 
     def Receive_Update(self, data):
         for key, value in data.items():
@@ -64,8 +70,12 @@ class Game:
         data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}
         self.client.Send({"Game_Update":data_dict})
         
+    def Leave_Game(self):
+        pass
+        
 
     def Start(self):
+        self.running = True
         self.window = pygame.display.set_mode((self.board_pixel_size, self.board_pixel_size))
         pygame.init()
         pygame.font.init() 
@@ -74,7 +84,6 @@ class Game:
         
         self.UpdateBoard()
         self.main()
-
 
     def main(self):
         
@@ -115,6 +124,10 @@ class Game:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.running = False
+                        if self.client:
+                            #only whenever game is closed bu user.
+                            #idk about embeding this into gui window
+                            self.Leave_Game()
                     elif event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_p:
                             self.Board.Print_Board()
@@ -142,7 +155,7 @@ class Game:
                             #if the game is over (self.turn = None)
                             else:
                                 print(f"Game has ended! {winner.name} has won!")
-                                
+
         #joining bots threads
         if self.player1 == "Bot":
             print(f"Waiting for {Bot1} to finish...")
@@ -151,7 +164,7 @@ class Game:
             print(f"Waiting for {Bot2} to finish...")
             Bot_thread2.join()
         pygame.quit()
-        
+
         print("Game closed")
 
     def BotMove(self, Bot):
@@ -172,7 +185,7 @@ class Game:
         self.bot_ready = True
 
     def Change_Turn(self):
-        
+        self.turn_counter += 1
         if self.turn == self.player_color:
             if self.selected:
                 self.last_ending_position = self.selected.position()

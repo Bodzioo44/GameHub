@@ -3,6 +3,7 @@ from PyQtDesigner_Menu import Ui_Menu
 import threading
 import sys
 from Client import Client
+from Assets.constants import Game_Type
 
 class MainWindow(QWidget, Ui_Menu):
     def __init__(self, parent = None):
@@ -21,7 +22,6 @@ class MainWindow(QWidget, Ui_Menu):
         self.Online.clicked.connect(self.Online_Mode_Button)
         self.Offline.clicked.connect(self.Offline_Mode_Button)
         self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
-
 
     """
     SENDS INFO DIRECTLY TO THE SERVER BASED ON ACTION INSIDE GUI
@@ -58,10 +58,10 @@ class MainWindow(QWidget, Ui_Menu):
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
     def Chess_2_Button(self):
-        self.client.Send({"Create_Lobby":"Chess_2"})
+        self.client.Send({"Create_Lobby":Game_Type.Chess_2.name})
 
     def Checkers_2_Button(self):
-        self.client.Send({"Create_Lobby":"Checkers_2"})
+        self.client.Send({"Create_Lobby":Game_Type.Checkers_2.name})
 
 
     def Leave_Lobby_Button(self):
@@ -104,7 +104,7 @@ class MainWindow(QWidget, Ui_Menu):
 
     #TODO this is ugly af, replace it with some kind of label (visual quality improvement)
     def Add_Lobby_Info_Label(self, data:str):
-        self.Lobby_Info.setText(data)
+        self.Lobby_Info_Label.setText(data)
 
 
     #TODO add flashing tabs on new message (visual quality improvement)
@@ -128,12 +128,11 @@ class MainWindow(QWidget, Ui_Menu):
         else:
             self.client = Client("Bodzioo", '127.0.0.1', 4444, self)
         self.client.Connect()
-        listening_thread = threading.Thread(target = lambda: self.client.StartListening())
-        listening_thread.start()
 
     def closeEvent(self, event):
-        print("GUI Closed, disconnecting from the server...")
+        print("GUI was closed, disconnecting from the server...")
         self.client.Disconnect()
+        print("Disconnected. Goodbye!")
         event.accept()
 
 if __name__ == "__main__":

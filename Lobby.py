@@ -1,11 +1,12 @@
 from Assets.constants import Player_Colors, Game_Type
+from time import strftime, localtime, sleep
 
-
-
+#Lobby actions should return finished dict with data assigned for each player
+#for example: {Player to send: dict with multiple entries}
 class Lobby:
     def __init__(self, game_type:Game_Type, id:int):
-        self.type = game_type.name
-        self.size = game_type.value
+        self.type = game_type
+        self.size = game_type.value[1]
         self.live = False
         self.id = id
         self.colors = {}
@@ -15,41 +16,19 @@ class Lobby:
         self.host = None
         
         self.game_history = {}
+        self.turn = 0
         self.disconnected_players = []
-
-
-    #__dict__?
-    #Add everything that needs to be displayed in GUI into single dict with multiple entries
-    #so the lobby description would look like this: Lobby id - 2; Player Count - (2/4);Game type - Chess; Live - True
-    def Get_Dict(self):
+    
+    def Get_List(self) -> list:
         pp = []
         for player in self.players:
             pp.append(player.name)
+        Info = [self.id, pp, self.type.name, self.live]
+        return Info
 
-        Info = {
-            "Players":pp,
-            "Size":self.size,
-            "Type":self.type,
-            "Live":self.live,
-            "Host":self.host.name
-        }
-        return Info
-    
-    def Get_List(self):
-        pp = []
-        for player in self.players:
-            pp.append(player.name)
-        Info = [self.id, pp, self.type, self.live]
-        return Info
-    
-    #TODO send this to everyone who join along with _get_players_info
-    #or maybe merge them into one method? _get_lobby_info returns static lobby data
-    #returns list with lobby values for create lobby method
-    #kinda inconsistent with _get_players_info but whatever
     def _get_lobby_info(self) -> str:
-        return f"ID: {self.id} Type: {self.type} Size: {self.size} Live:{self.live}"
+        return f"ID: {self.id} Type: {self.type.name} Size: {self.size} Live:{self.live}"
     
-    #returns list with players info also as a list [[]]
     def _get_players_info(self) -> list:
         players_info_dict = []
         for player in self.players:
@@ -71,9 +50,14 @@ class Lobby:
         del self.colors[player]
         player.Leave_Lobby()
         print(f"{player.name} has left lobby {self.id}")
+        
+    def Game_Update(self, data:dict, player):
+        return_dict = {}
+        for p in self.Other_Players(player):
+            return_dict.update({p:{"Game_Update":data}})
+        return return_dict
 
-    #Lobby should return finished dict with data assigned for each player
-    #for example: {Player_to_send: dict with multiple entries}
+
     #this should return both _player_info and _lobby_info on join_lobby, and only _player_info on update_lobby
     def Join(self, player):
         return_dict = {}
@@ -93,12 +77,13 @@ class Lobby:
                                        "Update_Lobby":self._get_players_info()}})
                 
             return_dict[player].update({"Join_Lobby":(self._get_players_info(),self._get_lobby_info())})
-        print(f"Returning this: {return_dict}")
+        #print(f"Returning this: {return_dict}")
         return return_dict
-    
+
     #TODO Maybe move the return_dict generation in case of empty lobby here?
     def Leave(self, player):
-        return_dict = {}
+        return_dict = {
+            "Remove_Lobby":False}
         if self.live:
             return_dict.update({player:{"Message":["Cant leave live lobby."]}})
             return return_dict
@@ -115,11 +100,47 @@ class Lobby:
             for p in self.Other_Players(player):
                 return_dict.update({p:{"Message":message_list,
                                        "Update_Lobby":self._get_players_info()}})
-            return return_dict
         else:
-            return False
+            return_dict.update({"Remove_Lobby":True})
+        return return_dict
 
-
+    #does lobby needs to do anything with disconnected player? should sending info about disconnecting be here?
+    #exit lobby whenever its not started? keep the player after the game started?
+    #called by player, what to do whenever player disconnects
+    def Disconnect_Player(self, player):
+        return_dict = {
+            "Disconnect_Player":False,
+            "Remove_Lobby":False}
+        self._Remove_Player(player)
+        player.lobby = self
+        
+        if self.players:
+            if self.live:
+                return_dict.update({"Disconnect_Player":True})
+                self.disconnected_players.append(player)
+                
+            for p in self.players:
+                return_dict.update({p:{"Message":[f"{player.name} has disconnected."],
+                                       "Update_Lobby":self._get_players_info()}})
+        else:
+            return_dict.update({"Remove_Lobby":True})
+            
+        return return_dict
+    
+    #reconnect only occurs with live games, so that else is kinda uselses
+    def Reconnect_Player(self, player):
+        
+        return_dict = {}
+        for p in self.Other_Players(player):
+            return_dict.update({p:{"Message":[f"{player.name} has reconnected."]}})
+        self._Add_Player(player)
+        current_time = strftime("%H:%M:%S", localtime())
+        return_dict.update({player:{"Message":[f"Reconnected to the lobby {self.id}.", f"Sucesfully reconnected to the server as {player.name} at {current_time}"],
+                                    "Start_Lobby":(self.type.name, p.color.name),
+                                    "Request_Game_History":self.Request_Game_History(0)}})
+        
+        return return_dict
+    
     def start(self, player) -> dict:
         return_dict = {}
         if player != self.host:
@@ -128,12 +149,11 @@ class Lobby:
             self.live = True
             for p in self.players:
                 return_dict.update({p:{"Message":[f"Starting the {self.type} with id: {self.id} game as {p.color.name} player."],
-                                       "Start_Lobby":0}})
+                                       "Start_Lobby":(self.type.name, p.color.name)}})
         else:
              return_dict.update({player:{"Message":["Lobby is not filled"]}})
-        return return_dict
-
-
+        return return_dict 
+    
     def Other_Players(self, current_player):
         players_to_send = []
         for player in self.players:
@@ -152,37 +172,11 @@ class Lobby:
                 break
 
     def Update_Game_History(self, game_update:dict):
-        turn = len(self.game_history)
-        self.game_history.update({turn:game_update})
+        self.turn += 1
+        self.game_history.update({self.turn:game_update})
         
+    #TODO this might be better to send in parts, message might get too big for sockets, or pickle it and send it as a whole
     def Request_Game_History(self, turn:int) -> dict:
         #returns turns from input, to the end
         part_dict = {k: self.game_history[k] for k in list(range(turn, len(self.game_history)))}
         return part_dict
-
-    #does lobby needs to do anything with disconnected player? should sending info about disconnecting be here?
-    #exit lobby whenever its not started? keep the player after the game started?
-    #called by player, what to do whenever player disconnects
-    def Disconnect_Player(self, player):
-        return_dict = {}
-        if self.live:
-            #TODO LOBBBY IS LIVE AND PLAYER DISCONNECTED
-            #add DC'd player to a list
-            self.disconnected_players.append(player)
-            #add some reconnect method that will match with disconnected players
-            #add some bool anyone_can_connect to relist lobby, and maybe change self.live for lobby relisting??
-            #changing self.live is not a good idea imo.
-            pass
-        else:
-            return_dict = self.Leave(player)
-        return return_dict
-    
-    def Reconnect_Player(self, player):
-        return_dict = {}
-        #no idea whats supposed to be here
-        if self.live:
-            #whole check if player CAN reconnect
-            pass
-        else:
-            return_dict = self.Join(player)
-        return return_dict

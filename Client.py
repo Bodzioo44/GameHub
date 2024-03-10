@@ -2,91 +2,124 @@ import threading
 import socket
 import select
 import json
-import sys
 
 from Checkers.Game import Game as Checkers_Game
 from Chess.Game import Game as Chess_Game
-from Assets.constants import Player_Colors
+from Assets.constants import Player_Colors, Game_Type, API
 
+#Only send one message per action, otherwise they mix up and json.loads fails
 class Client:
-    def __init__(self, name: str, server: str, port:int, gui = None):
+    def __init__(self, name: str, server: str, port:int, gui):
         self.server = server
         self.port = port
-        if gui:
-            self.gui = gui
-        self.name = name
         self.addr = (server, port)
         self.sock = None
+        
         self.format = "utf-8"
         self.buff_size = 4096
+        
+        self.name = name
         self.game = None
+        self.gui = gui
+        
+        self.listening_thread = threading.Thread(target = self._start_listening)
+        self.running = True
 
     def Connect(self):
         print(f"Connecting to: {self.server}:{self.port}")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(self.addr)
-        print(f"Connected to {self.sock}")
-        #sending player_id for verification
         self.Send({"Connect":self.name})
+        print("Starting listening thread...")
+        self.listening_thread.start()
+        
+    def Disconnect(self):
+        self.running = False
+        print("Waiting for listening thread to finish...")
+        self.listening_thread.join()
+        if self.game:
+            self.game.running = False
+            print("Waiting for game thread to finish...")
+            self.game_thread.join()
+        print("Listening thread finished, closing the socket...")
+        self.sock.close()
+        self.gui.Stacked_Widget.setCurrentWidget(self.gui.Connection_Page)
+
+
+    def Reconnect(self):
+        self.running = True
+        self.Connect()
+        self.Send({"Request_Game_History":self.game.turn_count})
+
+
+    def _start_listening(self):
+        while self.running:
+            read_sockets, write_sockets, error_sockets = select.select([self.sock], [], [], 2)
+            if read_sockets:
+                try:
+                    message = self._receive()
+                    self.Message_Handler(message)
+                except socket.error as error:
+                    print(f"BIG SOCKET ERROR DETECTED: {error}")
+                    self.Disconnect()
 
     def Send(self, message: dict):
-        print(f"Sent: {message}")
         message = json.dumps(message)
-        #print(f"Sending: {message}")
         self.sock.send(message.encode(self.format))
         
-    #TODO find a way to close sockets properly
-    def Disconnect(self):
-        self.sock.close()
-        self.sock = None
-
-    #TODO modify with enum, add optional color selection
-    def Pick_Game_Type(self, type):
-        match type:
-            case "Chess_4":
-                return Chess_Game(4)
-            case "Checkers_2":
-                return Checkers_Game(800)
-            case "Chess_2":
-                return Chess_Game(2)
-
-    def Receive(self) -> dict:
+    def _receive(self) -> dict:
         message = self.sock.recv(self.buff_size).decode(self.format)
+        print(f"Received this shiet: {message}")
         if message:
             message = json.loads(message)
-            print(f"Received: {message}")
             return message
         else:
-            raise socket.error("Received empty message")
+            print("Received empty message, disconnecting...")
+            self.Disconnect()
 
-    #TODO this needs to edit gui elements
+    def start_game(self, type:Game_Type, color:Player_Colors):
+        match type:
+            case Game_Type.Chess_4:
+                self.game = Chess_Game(4)
+            case Game_Type.Chess_2:
+                self.game = Chess_Game(2)
+            case Game_Type.Checkers_2:
+                self.game = Checkers_Game(800)
+        self.game.Assign_Online_Players(color, self)
+        self.game_thread = threading.Thread(target = self.game.Start)
+        self.game_thread.start()
+
+    #This edits assigned GUI based on the server response
     def Message_Handler(self, message:dict):
         for api_id, data in message.items():
-            #print(f"Received: {api_id}:{data}")
             match api_id:
+                case "Request_Game_History":
+                    print(f"Received game history from the server: {data}")
+                    self.game.Catchup(data)
+                    #self.game_thread.start()
+
                 case "Game_Update":
                     if self.game:
                         self.game.Receive_Update(data)
                     else:
-                        print("we shouldnt be here, but idk")
-                
-                #data = lobby_type, player_color
+                        print("Received game update, but no game is assigned.")
+                        
                 case "Start_Lobby":
-                    print("we would have started the game.")
-                    #lobby_type, player_color = data
-                    #player_color = Color(tuple(player_color))
-                    #self.game = self.Pick_Game_Type(lobby_type)
-                    #self.game.Assign_Online_Players(player_color, self)
-                    #self.game_thread = threading.Thread(target = lambda: self.game.Start()).start()
+                    print(data)
+                    game_type = Game_Type[data[0]]
+                    print(game_type)
+                    player_color = Player_Colors[data[1]]
+                    print(player_color)
+                    self.start_game(game_type, player_color)
 
                 case "Join_Lobby":
-                    print(f"Received call to join lobby, changing current widget: {data}")
+                    #print(f"Received call to join lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Page)
                     self.gui.Add_Player_Info_Items(data[0])
-                    self.gui.Lobby_Info.setText(data[1])
+                    self.gui.Lobby_Info_Label.setText(data[1])
 
                 case "Leave_Lobby":
-                    print(f"Received call to leave lobby, changing current widget: {data}")
+                    #print(f"Received call to leave lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_List_Page)
 
                 case "Update_Lobby":
@@ -101,7 +134,7 @@ class Client:
                     self.Send(return_message)
 
                 case "Message":
-                    print(f"Message(s) Received from the Server: ", end="")
+                    #print(f"Message(s) Received from the Server: ", end="")
                     for message in data:
                         print(message)
 
@@ -112,40 +145,9 @@ class Client:
                     self.gui.Update_Lobby_Chat(data)
 
                 case "Disconnect":
-                    print(data)
                     self.Disconnect()
 
                 case _:
                     print(f"Invalid API {message}")
 
-    def StartListening(self):
-        if self.sock:
-            print("Starting listening...")
-        try:
-            while self.sock:
-                #print("is this working?")
-                read_sockets, write_sockets, error_sockets = select.select([self.sock], [], [], 2)
-                if read_sockets: #just one socket, so no need to iterate anything
-                    try:
-                        message = self.Receive()
-                        self.Message_Handler(message)
-                    except socket.error as error:
-                        print(f"socket error, disconnecting: {error}")
-                        self.Disconnect()
-                        
-            print("Disconnected from the server.")
-        except KeyboardInterrupt:
-            self.Disconnect()
-            self.game.Kill()
-            self.game_thread.join()
-            print("Keyboard Interrupt")
 
-if __name__ == '__main__':
-    import threading
-    #Client1 = Client('Bodzioo','192.168.1.14', 4444)
-    Client1 = Client(sys.argv[1],sys.argv[2], 4444)
-    Client1.Connect()
-    #t1 = threading.Thread(target=Test, args=(Client1,), daemon=True)
-    #t1.start()
-    Client1.StartListening()
-    #t1.join(0.1)

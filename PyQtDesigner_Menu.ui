@@ -103,14 +103,14 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="Connection_Page">
     <widget class="QPushButton" name="Offline">
      <property name="geometry">
       <rect>
        <x>120</x>
-       <y>90</y>
+       <y>130</y>
        <width>271</width>
        <height>81</height>
       </rect>
@@ -123,13 +123,39 @@
      <property name="geometry">
       <rect>
        <x>120</x>
-       <y>170</y>
+       <y>280</y>
        <width>271</width>
        <height>81</height>
       </rect>
      </property>
      <property name="text">
       <string>Online</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="Player_Name_Input">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>230</y>
+       <width>113</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Player1</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="IP_Adress_Input">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>230</y>
+       <width>113</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>127.0.0.1</string>
      </property>
     </widget>
    </widget>
@@ -235,7 +261,7 @@
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>70</y>
+       <y>50</y>
        <width>371</width>
        <height>321</height>
       </rect>
@@ -251,17 +277,30 @@
       </property>
      </column>
     </widget>
-    <widget class="QLabel" name="Lobby_Info">
+    <widget class="QLabel" name="Lobby_Info_Label">
      <property name="geometry">
       <rect>
-       <x>40</x>
-       <y>15</y>
-       <width>341</width>
+       <x>30</x>
+       <y>20</y>
+       <width>391</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Game Type: Checkers                                 Players: 2</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Kick_Player">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>400</y>
+       <width>81</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>AYOO, HOW DID WE GET HERE?</string>
+      <string>Kick Player</string>
      </property>
     </widget>
    </widget>

@@ -31,8 +31,6 @@ class Player:
         
     def Reconnect(self, sock):
         self.sock = sock
-        #another method just for rejoining lobby?
-        #self.lobby.Reconnect_Player(sock)
 
     def Rejoin_Lobby(self):
         pass
