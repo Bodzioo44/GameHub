@@ -1,14 +1,17 @@
 from PyQt5.QtWidgets import QWidget, QTreeWidgetItem, QApplication, QTextEdit
 from PyQtDesigner_Menu import Ui_Menu
+from Game_Widget import Game_Widget
 import threading
 import sys
 from Client import Client
 from Assets.constants import Game_Type
 
+
 class MainWindow(QWidget, Ui_Menu):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.setupUi(self)
+        self.openGLWidget = Game_Widget()
 
         self.Create_Lobby.clicked.connect(self.Create_Lobby_Button)
         self.Join_Lobby.clicked.connect(self.Join_Lobby_Button)
@@ -21,7 +24,7 @@ class MainWindow(QWidget, Ui_Menu):
         self.Update_Lobby_List.clicked.connect(self.Update_Lobby_List_Button)
         self.Online.clicked.connect(self.Online_Mode_Button)
         self.Offline.clicked.connect(self.Offline_Mode_Button)
-        self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
+        self.Stacked_Widget.setCurrentWidget(self.Game_Page)
 
     """
     SENDS INFO DIRECTLY TO THE SERVER BASED ON ACTION INSIDE GUI

@@ -60,7 +60,12 @@ class Server:
         if lobby := player.lobby:
             return_dict = lobby.Disconnect_Player(player)
             if return_dict.pop("Remove_Lobby"):
+                print(f"all disconnected players: {self.disconnected_player_list}")
+                for p in lobby.disconnected_players:
+                    print(f"Disconnected player in empty lobby: {p}")
+                    del self.disconnected_player_list[p.name]
                 del self.lobby_list[lobby.id]
+
             if return_dict.pop("Disconnect_Player"):
                 self.disconnected_player_list.update({player.name:player})
             else:
@@ -129,6 +134,8 @@ class Server:
                     if current_lobby:
                         return_dict = current_lobby.Leave(current_player)
                         if return_dict.pop("Remove_Lobby"):
+                            for p in current_lobby.disconnected_players:
+                                del self.disconnected_player_list[p.name]
                             del self.lobby_list[current_lobby.id]
                         else:
                             for key, value in return_dict.items():
@@ -273,7 +280,7 @@ class Server:
     #TODO Add check if the player is still connected here?
     def Send(self, conn: socket.socket, message: dict):
         message = json.dumps(message)
-        print(f"Sending this shiet: {message}")
+        #print(f"Sending this shiet: {message}")
         conn.send(message.encode(self.format))
 
     def Send_Lobby(self, lobby:Lobby, message:dict):

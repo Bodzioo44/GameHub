@@ -1,4 +1,6 @@
 import threading
+import multiprocessing
+import os
 import socket
 import select
 import json
@@ -24,6 +26,7 @@ class Client:
         
         self.listening_thread = threading.Thread(target = self._start_listening)
         self.running = True
+        self.threading_error = False
 
     def Connect(self):
         print(f"Connecting to: {self.server}:{self.port}")
@@ -69,7 +72,7 @@ class Client:
         
     def _receive(self) -> dict:
         message = self.sock.recv(self.buff_size).decode(self.format)
-        print(f"Received this shiet: {message}")
+        #print(f"Received this shiet: {message}")
         if message:
             message = json.loads(message)
             return message
@@ -77,6 +80,8 @@ class Client:
             print("Received empty message, disconnecting...")
             self.Disconnect()
 
+    #FIXME dont fuck around with OpenGL since it doesnt really like multi-threading,
+    #maybe add exception, and try multiprocessing?
     def start_game(self, type:Game_Type, color:Player_Colors):
         match type:
             case Game_Type.Chess_4:
@@ -86,8 +91,17 @@ class Client:
             case Game_Type.Checkers_2:
                 self.game = Checkers_Game(800)
         self.game.Assign_Online_Players(color, self)
-        self.game_thread = threading.Thread(target = self.game.Start)
+        #try:
+        #    self.game_thread = threading.Thread(target = self.game.Start, args=(), daemon=True)
+        #except pygame.error:
+        #    self.Disconnect()
+        print("Starting game process")
+        manager = multiprocessing.Manager()
+        #manager.start()
+        self.game = manager.Lock()
+        self.game_thread = multiprocessing.Process(target=self.game.Start)
         self.game_thread.start()
+        print(f"PID of process: {self.game_thread.pid, self.game_thread.is_alive()}")
 
     #This edits assigned GUI based on the server response
     def Message_Handler(self, message:dict):
@@ -96,7 +110,7 @@ class Client:
                 case "Request_Game_History":
                     print(f"Received game history from the server: {data}")
                     self.game.Catchup(data)
-                    #self.game_thread.start()
+                    self.game_thread.start()
 
                 case "Game_Update":
                     if self.game:

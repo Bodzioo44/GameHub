@@ -6,6 +6,9 @@ class Player:
         #Player keeps lobby even while disconnected
         self.lobby = None
 
+    def __repr__(self):
+        return f"<{self.name}, color {self.color} with sock {self.sock}>"
+
     #returns dict with player name as a key and their color as a value, maybe more values in the future
     def get_info(self) -> list:
         return [self.name, self.color.name]

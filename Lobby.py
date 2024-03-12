@@ -112,12 +112,13 @@ class Lobby:
             "Disconnect_Player":False,
             "Remove_Lobby":False}
         self._Remove_Player(player)
+        self.disconnected_players.append(player)
         player.lobby = self
         
         if self.players:
             if self.live:
                 return_dict.update({"Disconnect_Player":True})
-                self.disconnected_players.append(player)
+                #self.disconnected_players.append(player)
                 
             for p in self.players:
                 return_dict.update({p:{"Message":[f"{player.name} has disconnected."],
@@ -180,3 +181,7 @@ class Lobby:
         #returns turns from input, to the end
         part_dict = {k: self.game_history[k] for k in list(range(turn, len(self.game_history)))}
         return part_dict
+    
+    def Kick_Disconnected_Players(self):
+        for p in self.disconnected_players:
+            pass

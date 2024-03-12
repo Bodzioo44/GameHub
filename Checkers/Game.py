@@ -10,6 +10,7 @@ except NameError as error:
     print(f"Pygame is not installed or other files are missing. \n{error}")
     sys.exit()
 
+#FIXME fix Assign_Offline_Players
 class Game:
     def __init__(self, board_pixel_size: int):
         self.board_pixel_size = board_pixel_size
@@ -75,8 +76,9 @@ class Game:
         
 
     def Start(self):
+        print("STARTING")
         self.running = True
-        self.window = pygame.display.set_mode((self.board_pixel_size, self.board_pixel_size))
+        self.window = pygame.display.set_mode((self.board_pixel_size, self.board_pixel_size), pygame.OPENGL | pygame.DOUBLEBUF)
         pygame.init()
         pygame.font.init() 
         self.my_font = pygame.font.SysFont('Comic Sans MS', 20)
@@ -147,10 +149,12 @@ class Game:
                                     print("Let the bots play!")
                                 else:
                                     #
-                                    if self.turn == self.player_color:
+                                    if self.client and self.turn == self.player_color:
                                         self.Select(pos)
                                     else:
-                                        print("Wait for your turn!")
+                                        self.Select(pos)
+                                    #else:
+                                    #    print("Wait for your turn!")
                                         
                             #if the game is over (self.turn = None)
                             else:
@@ -163,6 +167,7 @@ class Game:
         if self.player2 == "Bot":
             print(f"Waiting for {Bot2} to finish...")
             Bot_thread2.join()
+        print("LOOPS IS DED!>")
         pygame.quit()
 
         print("Game closed")
@@ -186,7 +191,7 @@ class Game:
 
     def Change_Turn(self):
         self.turn_counter += 1
-        if self.turn == self.player_color:
+        if self.client and self.turn == self.player_color:
             if self.selected:
                 self.last_ending_position = self.selected.position()
             elif self.commited:
@@ -194,7 +199,8 @@ class Game:
             else:
                 raise "We shouldnt be here?"
             
-            self.Send_Update()
+            if self.client:
+                self.Send_Update()
             
         if self.turn == Color.WHITE:
             self.turn = Color.BLACK
