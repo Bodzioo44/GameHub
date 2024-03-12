@@ -1,18 +1,19 @@
 from PyQt5.QtWidgets import QWidget, QTreeWidgetItem, QApplication, QTextEdit
+from PyQt5.QtCore import QTimer, QRect
+from PyQt5.QtGui import QImage, QPainter
 from PyQtDesigner_Menu import Ui_Menu
-from Game_Widget import Game_Widget
-import threading
 import sys
+import pygame
 from Client import Client
 from Assets.constants import Game_Type
+from PyGameWidget import PygameWidget
+
 
 
 class MainWindow(QWidget, Ui_Menu):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.setupUi(self)
-        self.openGLWidget = Game_Widget()
-
         self.Create_Lobby.clicked.connect(self.Create_Lobby_Button)
         self.Join_Lobby.clicked.connect(self.Join_Lobby_Button)
         self.Start_Lobby.clicked.connect(self.Start_Lobby_Button)
@@ -24,7 +25,20 @@ class MainWindow(QWidget, Ui_Menu):
         self.Update_Lobby_List.clicked.connect(self.Update_Lobby_List_Button)
         self.Online.clicked.connect(self.Online_Mode_Button)
         self.Offline.clicked.connect(self.Offline_Mode_Button)
+        
+        
+        self.Game_Widget = PygameWidget(self)
+        #Add resizing options to the widget
+        self.Game_Widget.setGeometry(QRect(0, 0, 400, 400))
+        self.Game_Widget.setObjectName("Game_Widget")
+        
+        self.Stacked_Widget.addWidget(self.Game_Page)
         self.Stacked_Widget.setCurrentWidget(self.Game_Page)
+        
+    """
+    PYGAME INTEGRATION STUFF
+    """
+
 
     """
     SENDS INFO DIRECTLY TO THE SERVER BASED ON ACTION INSIDE GUI

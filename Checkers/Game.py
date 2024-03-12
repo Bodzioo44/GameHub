@@ -11,6 +11,7 @@ except NameError as error:
     sys.exit()
 
 #FIXME fix Assign_Offline_Players
+#TODO get rid of pygame and leave only the logic
 class Game:
     def __init__(self, board_pixel_size: int):
         self.board_pixel_size = board_pixel_size

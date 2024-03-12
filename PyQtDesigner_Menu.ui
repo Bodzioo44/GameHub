@@ -103,7 +103,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>4</number>
    </property>
    <widget class="QWidget" name="Connection_Page">
     <widget class="QPushButton" name="Offline">
@@ -346,13 +346,13 @@
     </widget>
    </widget>
    <widget class="QWidget" name="Game_Page">
-    <widget class="QOpenGLWidget" name="openGLWidget">
+    <widget class="QWidget" name="Game_Widget" native="true">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>481</width>
-       <height>451</height>
+       <x>89</x>
+       <y>50</y>
+       <width>381</width>
+       <height>341</height>
       </rect>
      </property>
     </widget>

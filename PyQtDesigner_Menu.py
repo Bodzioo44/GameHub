@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\PyQtDesigner_Menu.ui'
+# Form implementation generated from reading ui file 'PyQtDesigner_Menu.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Menu(object):
     def setupUi(self, Menu):
@@ -104,14 +105,14 @@ class Ui_Menu(object):
         self.Stacked_Widget.addWidget(self.Create_Lobby_Page)
         self.Game_Page = QtWidgets.QWidget()
         self.Game_Page.setObjectName("Game_Page")
-        self.openGLWidget = QtWidgets.QOpenGLWidget(self.Game_Page)
-        self.openGLWidget.setGeometry(QtCore.QRect(10, 10, 481, 451))
-        self.openGLWidget.setObjectName("openGLWidget")
+        self.Game_Widget = QtWidgets.QWidget(self.Game_Page)
+        self.Game_Widget.setGeometry(QtCore.QRect(89, 50, 381, 341))
+        self.Game_Widget.setObjectName("Game_Widget")
         self.Stacked_Widget.addWidget(self.Game_Page)
 
         self.retranslateUi(Menu)
         self.Chat_Tab.setCurrentIndex(0)
-        self.Stacked_Widget.setCurrentIndex(1)
+        self.Stacked_Widget.setCurrentIndex(4)
         QtCore.QMetaObject.connectSlotsByName(Menu)
 
     def retranslateUi(self, Menu):
