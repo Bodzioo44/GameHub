@@ -3,13 +3,15 @@ from PyQt5.QtCore import QTimer, QRect
 from PyQt5.QtGui import QImage, QPainter
 from PyQtDesigner_Menu import Ui_Menu
 import sys
+import argparse
 import pygame
+import socket
 from Client import Client
 from Assets.constants import Game_Type
 from PyGameWidget import PygameWidget
 
 from Checkers.Game import Game as Checkers_Game
-from Game_V2 import Game as TestGame
+from Checkers.Game import Game as TestGame
 
 
 class MainWindow(QWidget, Ui_Menu):
@@ -28,26 +30,31 @@ class MainWindow(QWidget, Ui_Menu):
         self.Online.clicked.connect(self.Online_Mode_Button)
         self.Offline.clicked.connect(self.Offline_Mode_Button)
         
+        parser = argparse.ArgumentParser(description="Assign a client.")
+        parser.add_argument("name", nargs='?', default="Bodzioo", help="Name of the client")
+        parser.add_argument("address", nargs='?', default='127.0.0.1', help="Address of the client")
+        args = parser.parse_args()
+        
+        self.Player_Name_Input.setText(args.name)
+        self.IP_Adress_Input.setText(args.address)
+        self.Client = Client(self.Player_Name_Input.text(), self.IP_Adress_Input.text(), 4444, self)
+        
         #width = 400
         #height = 400    
         game = TestGame(400, None, None)
         #game.Assign_Offline_Players("Bot", "Bot")
         #game.Start()
-        self.Game_Widget = PygameWidget(400, 400, game, self)
+        #self.Game_Widget = PygameWidget(400, 400, game, self)
         
-        self.Game_Widget.start_timer()
+        #self.Game_Widget.start_timer()
         #Add resizing options to the widget
 
-        self.Game_Widget.setGeometry(QRect(50, 50, 400, 400))
+        #self.Game_Widget.setGeometry(QRect(50, 50, 400, 400))
         #self.Game_Widget.setObjectName("Game_Widget")
         
         #self.Stacked_Widget.addWidget(self.Game_Page)
-        self.Stacked_Widget.setCurrentWidget(self.Game_Page)
+        self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
         
-    """
-    PYGAME INTEGRATION STUFF
-    """
-
 
     """
     SENDS INFO DIRECTLY TO THE SERVER BASED ON ACTION INSIDE GUI
@@ -59,16 +66,20 @@ class MainWindow(QWidget, Ui_Menu):
     def Offline_Mode_Button(self):
         pass
     
-    #TODO add whole connection check and message box output before switching to lobby list page widget
     def Online_Mode_Button(self):
-        self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+        try:
+            self.Client.connect() 
+            self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
+        except socket.error as error:
+            print(f"Could not connect to the server, check the address and try again. {error}")
+
 
     #LOBBY LIST PAGE
 
     def Join_Lobby_Button(self):
         if selected := self.Lobby_Tree.selectedItems():
             print("Sending Join_Lobby request.")
-            self.client.Send({"Join_Lobby":int(selected[0].text(0))})
+            self.Client.Send({"Join_Lobby":int(selected[0].text(0))})
         else:
             print("select a lobby first")
     
@@ -76,7 +87,7 @@ class MainWindow(QWidget, Ui_Menu):
         self.Stacked_Widget.setCurrentWidget(self.Create_Lobby_Page)
 
     def Update_Lobby_List_Button(self):
-        self.client.Send({"Request_Lobbies":0})
+        self.Client.Send({"Request_Lobbies":0})
 
     #CREATE LOBBY PAGE
 
@@ -84,26 +95,27 @@ class MainWindow(QWidget, Ui_Menu):
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
     def Chess_2_Button(self):
-        self.client.Send({"Create_Lobby":Game_Type.Chess_2.name})
+        print("Not yet inplemented, go away.")
+        #self.Client.Send({"Create_Lobby":Game_Type.Chess_2.name})
 
     def Checkers_2_Button(self):
-        self.client.Send({"Create_Lobby":Game_Type.Checkers_2.name})
+        self.Client.Send({"Create_Lobby":Game_Type.Checkers_2.name})
 
 
     def Leave_Lobby_Button(self):
-        self.client.Send({"Leave_Lobby":0})
+        self.Client.Send({"Leave_Lobby":0})
     
 
     def Start_Lobby_Button(self):
-        self.client.Send({"Start_Lobby":0})
+        self.Client.Send({"Start_Lobby":0})
         #print("start lobby")
 
-    #TODO add self.client check so it doesnt work in offline mode
+    #TODO add self.Client check so it doesnt work in offline mode
     def Message_Input_Enter_Button(self):
         message = self.Message_Input.text()
         if message:
             current_message_box = self.Chat_Tab.currentWidget().findChildren(QTextEdit)[0]
-            self.client.Send({current_message_box.objectName():[f"{self.client.name}: "+message]})
+            self.Client.Send({current_message_box.objectName():[f"{self.Client.name}: "+message]})
 
     """
     CALLED DIRECTLY FROM CLIENT.MESSAGE_HANDLER()
@@ -146,25 +158,16 @@ class MainWindow(QWidget, Ui_Menu):
         self.Lobby_Chat_Box.verticalScrollBar().setValue(self.Lobby_Chat_Box.verticalScrollBar().maximum())
         self.Message_Input.clear()       
 
-
-    def Assign_Client(self):
-        #self.client = Client("Bodzioo", "83.22.224.227", 4444, self)
-        if len(sys.argv) == 3:
-            self.client = Client(sys.argv[1], sys.argv[2], 4444, self)
-        else:
-            self.client = Client("Bodzioo", '127.0.0.1', 4444, self)
-        self.client.Connect()
-
     def closeEvent(self, event):
         print("GUI was closed, disconnecting from the server...")
-        self.client.Disconnect()
+        self.Client.Disconnect()
         print("Disconnected. Goodbye!")
         event.accept()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.Assign_Client()
+    window.assign_client()
     window.show()
     sys.exit(app.exec_())
 

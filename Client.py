@@ -6,7 +6,6 @@ import select
 import json
 
 from Checkers.Game import Game as Checkers_Game
-from Chess.Game import Game as Chess_Game
 from Assets.constants import Player_Colors, Game_Type, API
 
 #Only send one message per action, otherwise they mix up and json.loads fails
@@ -15,7 +14,8 @@ class Client:
         self.server = server
         self.port = port
         self.addr = (server, port)
-        self.sock = None
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(5)
         
         self.format = "utf-8"
         self.buff_size = 4096
@@ -26,16 +26,14 @@ class Client:
         
         self.listening_thread = threading.Thread(target = self._start_listening)
         self.running = True
-        self.threading_error = False
 
-    def Connect(self):
+    def connect(self):
         print(f"Connecting to: {self.server}:{self.port}")
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(self.addr)
         self.Send({"Connect":self.name})
         print("Starting listening thread...")
         self.listening_thread.start()
-        
+
     def Disconnect(self):
         self.running = False
         print("Waiting for listening thread to finish...")
@@ -84,10 +82,10 @@ class Client:
     #maybe add exception, and try multiprocessing?
     def start_game(self, type:Game_Type, color:Player_Colors):
         match type:
-            case Game_Type.Chess_4:
-                self.game = Chess_Game(4)
-            case Game_Type.Chess_2:
-                self.game = Chess_Game(2)
+            #case Game_Type.Chess_4:
+            #    self.game = Chess_Game(4)
+            #case Game_Type.Chess_2:
+            #    self.game = Chess_Game(2)
             case Game_Type.Checkers_2:
                 self.game = Checkers_Game(800)
         self.game.Assign_Online_Players(color, self)
