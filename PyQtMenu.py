@@ -8,6 +8,8 @@ from Client import Client
 from Assets.constants import Game_Type
 from PyGameWidget import PygameWidget
 
+from Checkers.Game import Game as Checkers_Game
+from Game_V2 import Game as TestGame
 
 
 class MainWindow(QWidget, Ui_Menu):
@@ -26,13 +28,20 @@ class MainWindow(QWidget, Ui_Menu):
         self.Online.clicked.connect(self.Online_Mode_Button)
         self.Offline.clicked.connect(self.Offline_Mode_Button)
         
+        #width = 400
+        #height = 400    
+        game = TestGame(400, None, None)
+        #game.Assign_Offline_Players("Bot", "Bot")
+        #game.Start()
+        self.Game_Widget = PygameWidget(400, 400, game, self)
         
-        self.Game_Widget = PygameWidget(self)
+        self.Game_Widget.start_timer()
         #Add resizing options to the widget
-        self.Game_Widget.setGeometry(QRect(0, 0, 400, 400))
-        self.Game_Widget.setObjectName("Game_Widget")
+
+        self.Game_Widget.setGeometry(QRect(50, 50, 400, 400))
+        #self.Game_Widget.setObjectName("Game_Widget")
         
-        self.Stacked_Widget.addWidget(self.Game_Page)
+        #self.Stacked_Widget.addWidget(self.Game_Page)
         self.Stacked_Widget.setCurrentWidget(self.Game_Page)
         
     """

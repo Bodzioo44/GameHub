@@ -91,17 +91,11 @@ class Client:
             case Game_Type.Checkers_2:
                 self.game = Checkers_Game(800)
         self.game.Assign_Online_Players(color, self)
-        #try:
-        #    self.game_thread = threading.Thread(target = self.game.Start, args=(), daemon=True)
-        #except pygame.error:
-        #    self.Disconnect()
-        print("Starting game process")
-        manager = multiprocessing.Manager()
-        #manager.start()
-        self.game = manager.Lock()
-        self.game_thread = multiprocessing.Process(target=self.game.Start)
-        self.game_thread.start()
-        print(f"PID of process: {self.game_thread.pid, self.game_thread.is_alive()}")
+        self.game.Start()
+        self.gui.Start_PyGameWidget(self.game)
+        #self.gui.Game_Widget.timer.start(500)
+
+
 
     #This edits assigned GUI based on the server response
     def Message_Handler(self, message:dict):
@@ -114,6 +108,7 @@ class Client:
 
                 case "Game_Update":
                     if self.game:
+                        #Changed to proper naming convetion in game_v2
                         self.game.Receive_Update(data)
                     else:
                         print("Received game update, but no game is assigned.")

@@ -79,14 +79,13 @@ class Game:
     def Start(self):
         print("STARTING")
         self.running = True
-        self.window = pygame.display.set_mode((self.board_pixel_size, self.board_pixel_size), pygame.OPENGL | pygame.DOUBLEBUF)
+        self.window = pygame.Surface((self.board_pixel_size, self.board_pixel_size))
         pygame.init()
         pygame.font.init() 
         self.my_font = pygame.font.SysFont('Comic Sans MS', 20)
-        pygame.display.set_caption("Checkers")
-        
+        #pygame.display.set_caption("Checkers")
         self.UpdateBoard()
-        self.main()
+        #self.main()
 
     def main(self):
         
@@ -294,6 +293,9 @@ class Game:
         else:
             print("Select correct tile")
             
+
+
+
     def get_mouse_position(self, pos):
         x, y = pos
         return y//(self.board_pixel_size//8), x//(self.board_pixel_size//8)
@@ -318,14 +320,14 @@ class Game:
                     pygame.draw.rect(self.window, Color.GREY.value, (row*self.square_size, col *self.square_size, self.square_size, self.square_size), width=3)
                 for col in range(1, 8, 2):
                     pygame.draw.rect(self.window, Color.WHITE.value, (row*self.square_size, col *self.square_size, self.square_size, self.square_size), width=3)
-        pygame.display.update()
+        #pygame.display.update()
         
     #Draws highligted tiles on the board
     def Highlight_Squares(self, positions):
         #print(f"Highlighting: {positions}")
         for row, col in positions:
             pygame.draw.rect(self.window, Color.RED.value, (col*self.square_size, row*self.square_size, self.square_size, self.square_size), width=3)
-        pygame.display.update()
+        #pygame.display.update()
         
     #Redraws whole board
     def UpdateBoard(self):
@@ -347,7 +349,7 @@ class Game:
             for col in range(8):
                 text = self.my_font.render(f"{col}, {row}", False, Color.RED.value)
                 self.window.blit(text, (row*self.square_size, col*self.square_size))
-        pygame.display.update()
+        #pygame.display.update()
 
     #Draws pieces
     def draw_board(self):
@@ -358,5 +360,5 @@ class Game:
                     #deepcopy cant pickle pygame surfaces
                     img = pygame.transform.scale(pygame.image.load(piece.img_path), (piece.img_size, piece.img_size))
                     self.window.blit(img, piece.calc_img_position())
-        pygame.display.update()
+        #pygame.display.update()
 

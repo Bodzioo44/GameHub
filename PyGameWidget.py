@@ -10,8 +10,9 @@ from Assets.constants import Color
 #Pygame surface is running without initializing the window, and then converted to QImage
 #PyQt5 Widget events are used to generate equivalent pygame events
 class PygameWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, width, height, game, parent=None):
         super().__init__(parent)
+        self.game = game
 
         #Very nice, dont delete
         #self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -21,39 +22,49 @@ class PygameWidget(QWidget):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
+        #self.timer.start(500)
+
+    def start_timer(self):
         self.timer.start(16)
+
+    def stop_timer(self):
+        self.timer.stop()
 
 
     def init_pygame(self):
-        pygame.init()
-        self.screen = pygame.Surface((400, 400))
-
+        self.screen = self.game.window
 
     #Pygame events are uselsess, we are just generating our own events based on PyQt5 events
+    #this runs after the widget init, maybe disable it after the widget is no longer usefull.
+    
     def update_game(self):
 
-        self.screen.fill((255, 255, 255))
-        pygame.draw.circle(self.screen, Color.RED.value, (50, 50), 20)
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                self.mouse_click_pos = event.pos
-                print(self.mouse_click_pos)
-                #print(pygame.mouse.get_pos())
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                mouse_click_pos = event.pos.x(), event.pos.y()
+                mouse_click_pos = self.game.get_mouse_pos(mouse_click_pos)
+                self.game.select(mouse_click_pos)
+                if self.game.is_player_turn():
+                    self.update()
+                else:
+                    print("Not your turn")
                 
-                print("ayoyoyo")
-
-    #is this needed? afaik this dinamically updates the widget on timer, but we can do it manually
-    def paintEvent(self, event):
-        print("speeeed")
-        painter = QPainter(self)
-        painter.drawImage(0, 0, self.get_pygame_surface())
 
     #Converts pygame surface to QImage
-    def get_pygame_surface(self):
+    def get_pygame_surface(self) -> QImage:
         image = QImage(self.screen.get_buffer(), self.screen.get_width(), self.screen.get_height(),
                        QImage.Format_RGB32)
         return image
+    
+    #FIXME AttributeError: 'pygame.surface.Surface' object has no attribute 'transform'
+    def resizeEvent(self, event):
+        new_width = event.size().width()
+        new_height = event.size().height()
+        self.screen.transform.scale(self.screen, (new_width, new_height))
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawImage(0, 0, self.get_pygame_surface())
 
     #Hijacking the mousePressEvent to generate pygame events
     def mousePressEvent(self, event):
