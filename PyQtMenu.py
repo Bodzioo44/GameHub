@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QTreeWidgetItem, QApplication, QTextEdit
+from PyQt5.QtWidgets import QWidget, QTreeWidgetItem, QApplication, QTextEdit, QMainWindow
 from PyQt5.QtCore import QTimer, QRect
 from PyQt5.QtGui import QImage, QPainter
 from PyQtDesigner_Menu import Ui_Menu
@@ -7,17 +7,18 @@ import argparse
 import pygame
 import socket
 from Client import Client
-from Assets.constants import Game_Type
+from Assets.constants import Game_Type, get_local_ip
 from PyGameWidget import PygameWidget
 
 from Checkers.Game import Game as Checkers_Game
 from Checkers.Game import Game as TestGame
 
 
-class MainWindow(QWidget, Ui_Menu):
+class MainWindow(QMainWindow, Ui_Menu):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.setupUi(self)
+        self.setCentralWidget(self.gridLayoutWidget)
         self.Create_Lobby.clicked.connect(self.Create_Lobby_Button)
         self.Join_Lobby.clicked.connect(self.Join_Lobby_Button)
         self.Start_Lobby.clicked.connect(self.Start_Lobby_Button)
@@ -30,9 +31,10 @@ class MainWindow(QWidget, Ui_Menu):
         self.Online.clicked.connect(self.Online_Mode_Button)
         self.Offline.clicked.connect(self.Offline_Mode_Button)
         
+        #TODO put this outside of the class later on
         parser = argparse.ArgumentParser(description="Assign a client.")
         parser.add_argument("name", nargs='?', default="Bodzioo", help="Name of the client")
-        parser.add_argument("address", nargs='?', default='127.0.0.1', help="Address of the client")
+        parser.add_argument("address", nargs='?', default=get_local_ip(), help="Address of the client")
         args = parser.parse_args()
         
         self.Player_Name_Input.setText(args.name)
@@ -41,7 +43,7 @@ class MainWindow(QWidget, Ui_Menu):
         
         #width = 400
         #height = 400    
-        game = TestGame(400, None, None)
+        #game = TestGame(400, self.Client, )
         #game.Assign_Offline_Players("Bot", "Bot")
         #game.Start()
         #self.Game_Widget = PygameWidget(400, 400, game, self)
@@ -54,7 +56,16 @@ class MainWindow(QWidget, Ui_Menu):
         
         #self.Stacked_Widget.addWidget(self.Game_Page)
         self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
-        
+
+
+    def start_game_widget(self, game):
+        self.Game_Widget = PygameWidget(game, self)
+        self.Game_Widget.start_timer()
+        self.Stacked_Widget.setCurrentWidget(self.Game_Page)
+
+    def stop_game_widget(self):
+        self.Game_Widget.stop_timer()
+        self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
     """
     SENDS INFO DIRECTLY TO THE SERVER BASED ON ACTION INSIDE GUI
@@ -167,7 +178,6 @@ class MainWindow(QWidget, Ui_Menu):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.assign_client()
     window.show()
     sys.exit(app.exec_())
 

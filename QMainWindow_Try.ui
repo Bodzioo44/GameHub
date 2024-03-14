@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>936</width>
+    <height>744</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="gridLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>50</y>
+      <width>821</width>
+      <height>621</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0" columnstretch="8,0">
+     <property name="leftMargin">
+      <number>6</number>
+     </property>
+     <property name="topMargin">
+      <number>6</number>
+     </property>
+     <property name="rightMargin">
+      <number>6</number>
+     </property>
+     <property name="bottomMargin">
+      <number>6</number>
+     </property>
+     <property name="spacing">
+      <number>6</number>
+     </property>
+     <item row="0" column="1">
+      <widget class="QTabWidget" name="Chat_Tab_Widget">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="Global_Chat_Tab">
+        <attribute name="title">
+         <string>Global Chat</string>
+        </attribute>
+        <widget class="QWidget" name="verticalLayoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>211</width>
+           <height>541</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="Global_Chat_Tab_Layout">
+          <item>
+           <widget class="QTextEdit" name="Global_Chat_Text_Edit"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="Lobby_Chat_Tab">
+        <attribute name="title">
+         <string>Lobby Chat</string>
+        </attribute>
+        <widget class="QWidget" name="verticalLayoutWidget_2">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>211</width>
+           <height>541</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="Lobby_Chat_Tab_Layout">
+          <item>
+           <widget class="QTextEdit" name="Lobby_Chat_Text_Edit"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="Message_Input_Box">
+       <property name="inputMask">
+        <string/>
+       </property>
+       <property name="placeholderText">
+        <string>Enter message...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" rowspan="2">
+      <widget class="QStackedWidget" name="Stacked_Widget">
+       <property name="currentIndex">
+        <number>3</number>
+       </property>
+       <widget class="QWidget" name="Connection_Page">
+        <widget class="QWidget" name="verticalLayoutWidget_4">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>10</y>
+           <width>501</width>
+           <height>551</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="Connection_Page_Layout">
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="Offline_Button">
+            <property name="text">
+             <string>Offline</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="IP_Input_Box">
+            <property name="placeholderText">
+             <string>Enter server ip...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="Name_Input_Box">
+            <property name="placeholderText">
+             <string>Enter your name...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="Online_Button">
+            <property name="text">
+             <string>Online</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="Lobby_List_Page">
+        <widget class="QWidget" name="verticalLayoutWidget_3">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>10</y>
+           <width>561</width>
+           <height>581</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="Lobby_List_Page_Layout">
+          <item>
+           <widget class="QTreeWidget" name="Lobby_List_Tree_Widget">
+            <column>
+             <property name="text">
+              <string>Lobby ID</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Players</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Game Type</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Live</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="Lobby_List_Page_Buttons_Layout">
+            <item>
+             <widget class="QPushButton" name="Create_Lobby_Button">
+              <property name="text">
+               <string>Create Lobby</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="Join_Lobby_Button">
+              <property name="text">
+               <string>Join Lobby</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="Update_lobby_List_Button">
+              <property name="text">
+               <string>Update List</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="Lobby_Info_Page">
+        <widget class="QWidget" name="verticalLayoutWidget_5">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>611</width>
+           <height>581</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="Lobby_Info_Page_Layout">
+          <item>
+           <layout class="QHBoxLayout" name="Lobby_Info_Labels_Layout">
+            <item>
+             <widget class="QLabel" name="Lobby_ID_Label">
+              <property name="text">
+               <string>Lobby ID:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="Lobby_Type_Label">
+              <property name="text">
+               <string>Lobby Type:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="Lobby_Players_Label">
+              <property name="text">
+               <string>Players:</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTreeWidget" name="Lobby_Info_Tree_Widget">
+            <column>
+             <property name="text">
+              <string>Name</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Color</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="Lobby_Info_Buttons_Layput">
+            <item>
+             <widget class="QPushButton" name="Leave_Lobby_Button">
+              <property name="text">
+               <string>Leave Lobby</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="Start_Lobby_Button">
+              <property name="text">
+               <string>Start Lobby</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="Kick_Player_Button">
+              <property name="text">
+               <string>Kick Player</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="Game_Page">
+        <widget class="QWidget" name="verticalLayoutWidget_6">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>29</y>
+           <width>591</width>
+           <height>571</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="Game_Page_Layout"/>
+        </widget>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -18,7 +18,7 @@ class Ui_Menu(object):
         self.gridLayoutWidget = QtWidgets.QWidget(Menu)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(20, 10, 781, 441))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
+        self.gridLayout = QtWidgets.QGridLayout(Menu)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.Message_Input = QtWidgets.QLineEdit(self.gridLayoutWidget)

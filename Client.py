@@ -88,10 +88,8 @@ class Client:
             #    self.game = Chess_Game(2)
             case Game_Type.Checkers_2:
                 self.game = Checkers_Game(800)
-        self.game.Assign_Online_Players(color, self)
-        self.game.Start()
-        self.gui.Start_PyGameWidget(self.game)
-        #self.gui.Game_Widget.timer.start(500)
+        
+        self.gui.start_game_widget(self.game)
 
 
 

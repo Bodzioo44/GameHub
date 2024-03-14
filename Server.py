@@ -4,11 +4,12 @@ import json
 import sys
 import platform
 import threading
+import argparse
 
 from Player import Player
 from Lobby import Lobby
-from Assets.constants import Game_Type, API
-from time import strftime, localtime, sleep
+from Assets.constants import get_local_ip, Game_Type, API
+from time import strftime, localtime
 
 
 #Only send one message per action, otherwise they mix up and json.loads fails
@@ -16,7 +17,7 @@ class Server:
     def __init__(self, ip: str, port:int = 4444):
         self.ip = ip
         self.port = port
-        self.addr = (ip, port)
+        self.addr = (self.ip, self.port)
         self.format = "utf-8"
         self.buff_size = 4096
         self.Running = True
@@ -333,9 +334,8 @@ class Server:
             i += 1
             
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        ip = sys.argv[1]
-    else:
-        ip = '192.168.1.14'
-    Server1 = Server(ip, 4444)
+    parser = argparse.ArgumentParser(description="Assign a client.")
+    parser.add_argument("address", nargs='?', default=get_local_ip(), help="Address of the client")
+    args = parser.parse_args()
+    Server1 = Server(args.address, 4444)
     Server1.Start_Server()

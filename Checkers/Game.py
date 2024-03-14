@@ -166,6 +166,13 @@ class Game:
     PYGAME SURFACE DRAWING STUFF
     """
 
+    def rescale_screen(self, new_size:int):
+        self.size = new_size
+        self.square_size = new_size//8
+        #self.window = pygame.Surface((new_size, new_size))
+        self.window = pygame.transform.scale(self.window, (new_size, new_size))
+        self._redraw_board()
+
     def _remove_highlight(self):
         for row in range(8):
             if row % 2 == 0:

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>811</width>
-    <height>467</height>
+    <width>906</width>
+    <height>616</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,11 +18,11 @@
     <rect>
      <x>20</x>
      <y>10</y>
-     <width>781</width>
-     <height>441</height>
+     <width>811</width>
+     <height>541</height>
     </rect>
    </property>
-   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0" columnstretch="5,2,0">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0" columnstretch="5,2">
     <item row="1" column="1">
      <widget class="QLineEdit" name="Message_Input">
       <property name="text">
@@ -310,27 +310,33 @@
        <attribute name="title">
         <string>Global Chat</string>
        </attribute>
-       <widget class="QTextEdit" name="Global_Chat_Box">
+       <widget class="QWidget" name="verticalLayoutWidget">
         <property name="geometry">
          <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>251</width>
-          <height>341</height>
+          <x>20</x>
+          <y>80</y>
+          <width>160</width>
+          <height>351</height>
          </rect>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTextEdit" name="Global_Chat_Box">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAsNeeded</enum>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </widget>
       <widget class="QWidget" name="Lobby_Chat">
