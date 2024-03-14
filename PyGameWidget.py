@@ -1,10 +1,7 @@
-import sys
 import pygame
 from PyQt5.QtWidgets import QSizePolicy, QWidget
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPainter
-
-from Assets.constants import Color
 
 
 #Pygame surface is running without initializing the window, and then converted to QImage
@@ -12,10 +9,14 @@ from Assets.constants import Color
 #Can i even create this without game object? or will it try to update iself right on creation
 class PygameWidget(QWidget):
     def __init__(self, game, parent=None):
+        
         print("Initializing PygameWidget")
         super().__init__(parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.game = game
+        
         self.screen = self.game.window
+        
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
         self.start_timer()
@@ -30,7 +31,7 @@ class PygameWidget(QWidget):
     #this runs after the widget init, maybe disable it after the widget is no longer usefull.
 
     def update_game(self):
-        print("Updating game")
+        #print("Updating game")
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_click_pos = event.pos.x(), event.pos.y()
@@ -42,6 +43,8 @@ class PygameWidget(QWidget):
                 else:
                     print("Not your turn")
 
+        self.update()
+
     #Converts pygame surface to QImage
     def get_pygame_surface(self) -> QImage:
         image = QImage(self.screen.get_buffer(), self.screen.get_width(), self.screen.get_height(),
@@ -51,11 +54,14 @@ class PygameWidget(QWidget):
     #FIXME AttributeError: 'pygame.surface.Surface' object has no attribute 'transform'
     #somehow make it only rescale on both axis
     def resizeEvent(self, event):
+        #print("Resizing event")
         new_width = event.size().width()
         new_height = event.size().height()
         self.game.rescale_screen(new_width)
-        #self.screen.transform.scale(self.screen, (new_width, new_height))
-
+        #print(f"LALO {self.screen} with size {self.screen.get_size()}")
+        #so self.game.window is not being updated, because for some reason its copied by value not reference?
+        self.screen = self.game.window
+        
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.drawImage(0, 0, self.get_pygame_surface())
@@ -63,5 +69,9 @@ class PygameWidget(QWidget):
     #Hijacking the mousePressEvent to generate pygame events
     def mousePressEvent(self, event):
         pygame_event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'button': event.button(), 'pos': event.pos()})
+        width = self.frameGeometry().width()
+        height = self.frameGeometry().height()
+        #print(f"W: {width} H: {height}")
+        #print(f"X: {event.x()} Y: {event.y()}")
         pygame.event.post(pygame_event)
 

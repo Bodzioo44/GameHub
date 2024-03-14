@@ -6,7 +6,6 @@ import json
 from Checkers.Game import Game as Checkers_Game
 from Assets.constants import Player_Colors, Game_Type, API, get_local_ip
 
-
 #Only send one message per action, otherwise they mix up and json.loads fails
 class Client:
     def __init__(self, gui):
@@ -16,7 +15,7 @@ class Client:
         self.game = None
         self.gui = gui
         
-        self.running = True
+        self.running = False
 
     def connect(self, name:str = "Bodzioo", ip:str = get_local_ip(), port:int = 4444):
         self.ip = ip
@@ -30,21 +29,18 @@ class Client:
         self.sock.connect(self.addr)
         self.send({"Connect":self.name})
         print("Starting listening thread...")
-        self.listening_thread = threading.Thread(target = self._start_listening)
         self.running = True
-        self.listening_thread.start()
+        #self.listening_thread = threading.Thread(target = self._start_listening)
+        #self.listening_thread.start()
 
     def disconnect(self):
-        print("Disconnecting from the server...")
-        self.running = False
-        print("Waiting for listening thread to finish...")
-        if threading.current_thread() is not self.listening_thread:
-            self.listening_thread.join()
-        #if self.game:
-        #    self.game.running = False
-        #    print("Waiting for game thread to finish...")
-        print("Listening thread finished, closing the socket...")
-        self.sock.close()
+        if self.running:
+            print("Disconnecting from the server...")
+            print("Waiting for listening thread to finish...")
+            self.gui.thread.terminate()
+            self.running = False
+            print("Listening thread finished, closing the socket...")
+            self.sock.close()
         self.gui.Stacked_Widget.setCurrentWidget(self.gui.Connection_Page)
         
 
@@ -69,6 +65,7 @@ class Client:
         self.sock.send(message.encode(self.format))
         
     def _receive(self) -> dict:
+        #print(self.sock)
         message = self.sock.recv(self.buff_size).decode(self.format)
         #print(f"Received this shiet: {message}")
         if message:
@@ -81,12 +78,8 @@ class Client:
 
     def start_game(self, type:Game_Type, color:Player_Colors):
         match type:
-            #case Game_Type.Chess_4:
-            #    self.game = Chess_Game(4)
-            #case Game_Type.Chess_2:
-            #    self.game = Chess_Game(2)
             case Game_Type.Checkers_2:
-                self.game = Checkers_Game(800, self, color)
+                self.game = Checkers_Game(400, self, color)
         
         self.gui.start_game_widget(self.game)
 
@@ -100,6 +93,7 @@ class Client:
                     print(f"Received game history from the server: {data}")
 
                 case "Game_Update":
+                    print("Received game update")
                     self.game.receive_update(data)
                     
                 case "Start_Lobby":
@@ -149,5 +143,3 @@ class Client:
 
                 case _:
                     print(f"Invalid API {message}")
-
-

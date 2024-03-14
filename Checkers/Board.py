@@ -5,6 +5,7 @@ from numpy import sign
 
 #TODO maybe add piece count for easier winner check?
 #TODO move Get_All_Moves from Bot to here for easier winner check?
+#TODO Remove board_pixel_size from board class and square size
 class Board:
     def __init__(self, board_pixel_size, extra_row = True):
         self.square_size = board_pixel_size//8

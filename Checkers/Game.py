@@ -6,7 +6,7 @@ from Checkers.Board import Board
 class Game:
     def __init__(self, size:int, Client, player_color:Player_Colors):
         self.size = size
-        self.square_size = size//8
+        self.square_size = size/8
 
         self.Board = Board(size)
         self.Client = Client
@@ -18,7 +18,7 @@ class Game:
         self.turn_counter = 0
 
         self.running = True
-        self.debugg = True
+        self.debugg = False
 
         pygame.init()
         pygame.font.init()
@@ -126,7 +126,7 @@ class Game:
                 self.last_ending_position = self.commited.position()
             else:
                 raise "Something went really bad, no selected or commited piece after player move"
-
+            print("Changed turn and sending update")
             self.send_update()
 
         if self.turn == Color.WHITE:
@@ -141,7 +141,7 @@ class Game:
                 case "Position":
                     row, col = value[0]
                     piece = self.Board.Grab_Tile(row, col)
-                    print(piece)
+                    #print(piece)
                     self.Board.Move(piece, value[1])
                 case "Removed":
                     for pos in value:
@@ -169,7 +169,10 @@ class Game:
     def rescale_screen(self, new_size:int):
         self.size = new_size
         self.square_size = new_size//8
-        #self.window = pygame.Surface((new_size, new_size))
+        #print(f"Rescaling screen to {self.size} with square size {self.square_size}")
+        #print(f"We are resizing this windw {self.window} with size {self.window.get_size()}")
+        #TODO one of these is probably usesless (doing the same thing twice?)
+        self.window = pygame.Surface((new_size, new_size))
         self.window = pygame.transform.scale(self.window, (new_size, new_size))
         self._redraw_board()
 
@@ -214,5 +217,5 @@ class Game:
                 if self.Board.board[i][j] != "0":
                     piece = self.Board.board[i][j]
                     #deepcopy cant pickle pygame surfaces
-                    img = pygame.transform.scale(pygame.image.load(piece.img_path), (piece.img_size, piece.img_size))
-                    self.window.blit(img, piece.calc_img_position())
+                    img = pygame.transform.scale(pygame.image.load(piece.img_path), (self.square_size*0.75, self.square_size*0.75))
+                    self.window.blit(img, piece.calc_img_position(self.square_size, self.square_size*0.75))

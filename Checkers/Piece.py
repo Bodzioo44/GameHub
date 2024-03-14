@@ -1,18 +1,19 @@
 from Assets.constants import Color
 
+#TODO Remove square_size from piece class
 class Piece:
     def __init__(self, row, col, color, square_size):
         self.row = row
         self.col = col
         self.color = color
         self.img_scale = 0.75
-        self.square_size = square_size
-        self.img_size = self.square_size * self.img_scale
+        #self.square_size = square_size
+        #self.img_size = self.square_size * self.img_scale
         self.AssignColorValues()
 
-    def calc_img_position(self):
-        x = (self.square_size * self.col) + (self.square_size - self.img_size)//2
-        y = (self.square_size * self.row) + (self.square_size - self.img_size)//2
+    def calc_img_position(self, square_size, img_size):
+        x = (square_size * self.col) + (square_size - img_size)/2
+        y = (square_size * self.row) + (square_size - img_size)/2
         return x, y
 
     def move(self, row, col):

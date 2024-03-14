@@ -107,7 +107,7 @@
      <item row="0" column="0" rowspan="2">
       <widget class="QStackedWidget" name="Stacked_Widget">
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="Connection_Page">
         <widget class="QWidget" name="verticalLayoutWidget_4">
@@ -250,7 +250,7 @@
            <height>531</height>
           </rect>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout">
+         <layout class="QVBoxLayout" name="Lobby_Creation_Layout">
           <item>
            <spacer name="verticalSpacer_3">
             <property name="orientation">
@@ -396,7 +396,22 @@
            <height>571</height>
           </rect>
          </property>
-         <layout class="QVBoxLayout" name="Game_Page_Layout"/>
+         <layout class="QVBoxLayout" name="Game_Page_Layout">
+          <item>
+           <widget class="QPushButton" name="pushButton">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_2">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </widget>
       </widget>

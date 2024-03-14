@@ -1,12 +1,12 @@
 from PyQt5.QtWidgets import QTreeWidgetItem, QApplication, QTextEdit, QMainWindow
 from PyQtDesigner import Ui_MainWindow
 from PyGameWidget import PygameWidget
+from PyQtListeningThread import ListeningThread
 
 import sys
 import socket
 from Client import Client
 from Assets.constants import Game_Type, get_local_ip
-
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -17,10 +17,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #LAYOUTS SETUP
         self.Global_Chat_Tab.setLayout(self.Global_Chat_Tab_Layout)
         self.Lobby_Chat_Tab.setLayout(self.Lobby_Chat_Tab_Layout)
+        
         self.Connection_Page.setLayout(self.Connection_Page_Layout)
         self.Lobby_List_Page.setLayout(self.Lobby_List_Page_Layout)
+        self.Lobby_Creation_Page.setLayout(self.Lobby_Creation_Layout)
         self.Lobby_Info_Page.setLayout(self.Lobby_Info_Page_Layout)
-        self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
+        self.Game_Page.setLayout(self.Game_Page_Layout)
         
         #BUTTONS SETUP
         self.Online_Button.clicked.connect(self.Online_Button_Action)
@@ -45,9 +47,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.IP_Input_Box.setText(get_local_ip())
         self.Client = Client(self)
 
+        self.resize(850, 580)
+        self.ratio = 850/580
+        
+        self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
+
+        #from Checkers.Game import Game
+        #from Assets.constants import Player_Colors
+        #self.start_game_widget(Game(400, self.Client, Player_Colors.WHITE))
+        #self.Stacked_Widget.setCurrentWidget(self.Game_Page)
+        #self.Stacked_Widget.setCurrentIndex(4)
+        #WHAT THE FUCK
+        #0, 1 and 3 is resizing.
+        #2 and 4 are not
+        #YEP, im stupid. kinda obvious now
     """
     PYGAME INEGRATION STUFF
     """
+    #TODO ideally create the widget on init, and just change its state when needed
     def start_game_widget(self, game):
         self.Game_Widget = PygameWidget(game, self)
         self.Game_Widget.start_timer()
@@ -68,8 +85,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def Online_Button_Action(self):
         try:
             self.Client.connect(self.Name_Input_Box.text(), self.IP_Input_Box.text()) 
+            self.thread = ListeningThread(self.Client)
+            self.thread.signal.connect(self.Client._message_handler)
+            self.thread.start()
             self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
         except socket.error as error:
+            self.thread.terminate()
             print(f"Could not connect to the server, check the address and try again. {error}")
        
             
@@ -167,6 +188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 item.setText(i, str(value))
             self.Lobby_Info_Tree_Widget.addTopLevelItem(item)
             
+    #FIXME this receives string instead a list, fix the server side
     def set_lobby_info_label(self, data:list):
         self.Lobby_ID_Label.setText(data[0])
         self.Lobby_Type_Label.setText(data[1])
@@ -176,6 +198,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     REDEFINING PYQT EVENTS STUFF
     """
+    #TODO this still needs work, probably some changes inside Chat_Tab too.
+    def resizeEvent(self, event):
+        w = event.size().width()
+        h = int(w / self.ratio)
+        self.resize(w, h)
+        print(f"Resizing to {w}x{h}")
+    
     def closeEvent(self, event):
         print("GUI was closed...")
         if self.Client.running:
