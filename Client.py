@@ -1,70 +1,70 @@
 import threading
-import multiprocessing
-import os
 import socket
 import select
 import json
 
 from Checkers.Game import Game as Checkers_Game
-from Assets.constants import Player_Colors, Game_Type, API
+from Assets.constants import Player_Colors, Game_Type, API, get_local_ip
+
 
 #Only send one message per action, otherwise they mix up and json.loads fails
 class Client:
-    def __init__(self, name: str, server: str, port:int, gui):
-        self.server = server
-        self.port = port
-        self.addr = (server, port)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(5)
-        
+    def __init__(self, gui):
         self.format = "utf-8"
         self.buff_size = 4096
-        
-        self.name = name
+
         self.game = None
         self.gui = gui
         
-        self.listening_thread = threading.Thread(target = self._start_listening)
         self.running = True
 
-    def connect(self):
-        print(f"Connecting to: {self.server}:{self.port}")
+    def connect(self, name:str = "Bodzioo", ip:str = get_local_ip(), port:int = 4444):
+        self.ip = ip
+        self.port = port
+        self.name = name
+        self.addr = (self.ip, self.port)
+        
+        print(f"Connecting to: {self.ip}:{self.port}")
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(5)
         self.sock.connect(self.addr)
-        self.Send({"Connect":self.name})
+        self.send({"Connect":self.name})
         print("Starting listening thread...")
+        self.listening_thread = threading.Thread(target = self._start_listening)
+        self.running = True
         self.listening_thread.start()
 
-    def Disconnect(self):
+    def disconnect(self):
+        print("Disconnecting from the server...")
         self.running = False
         print("Waiting for listening thread to finish...")
-        self.listening_thread.join()
-        if self.game:
-            self.game.running = False
-            print("Waiting for game thread to finish...")
-            self.game_thread.join()
+        if threading.current_thread() is not self.listening_thread:
+            self.listening_thread.join()
+        #if self.game:
+        #    self.game.running = False
+        #    print("Waiting for game thread to finish...")
         print("Listening thread finished, closing the socket...")
         self.sock.close()
         self.gui.Stacked_Widget.setCurrentWidget(self.gui.Connection_Page)
+        
 
-
-    def Reconnect(self):
-        self.running = True
-        self.Connect()
-        self.Send({"Request_Game_History":self.game.turn_count})
-
-
+    #TODO move this to the pyqt5 loop?
+    #yep, prolly the good idea to avoid QObject::setParent: Cannot set parent, new parent is in a different thread
+    #totally yep, try pyqtSingal and WorkerThread
     def _start_listening(self):
         while self.running:
+            #print("Listening for messages...")
             read_sockets, write_sockets, error_sockets = select.select([self.sock], [], [], 2)
             if read_sockets:
                 try:
                     message = self._receive()
-                    self.Message_Handler(message)
+                    self._message_handler(message)
                 except socket.error as error:
                     print(f"BIG SOCKET ERROR DETECTED: {error}")
-                    self.Disconnect()
+                    self.disconnect()
 
-    def Send(self, message: dict):
+    def send(self, message: dict):
+        #print(f"Sending this shiet: {message}")
         message = json.dumps(message)
         self.sock.send(message.encode(self.format))
         
@@ -76,10 +76,9 @@ class Client:
             return message
         else:
             print("Received empty message, disconnecting...")
-            self.Disconnect()
+            self.disconnect()
 
-    #FIXME dont fuck around with OpenGL since it doesnt really like multi-threading,
-    #maybe add exception, and try multiprocessing?
+
     def start_game(self, type:Game_Type, color:Player_Colors):
         match type:
             #case Game_Type.Chess_4:
@@ -87,28 +86,22 @@ class Client:
             #case Game_Type.Chess_2:
             #    self.game = Chess_Game(2)
             case Game_Type.Checkers_2:
-                self.game = Checkers_Game(800)
+                self.game = Checkers_Game(800, self, color)
         
         self.gui.start_game_widget(self.game)
 
 
 
     #This edits assigned GUI based on the server response
-    def Message_Handler(self, message:dict):
+    def _message_handler(self, message:dict):
         for api_id, data in message.items():
             match api_id:
                 case "Request_Game_History":
                     print(f"Received game history from the server: {data}")
-                    self.game.Catchup(data)
-                    self.game_thread.start()
 
                 case "Game_Update":
-                    if self.game:
-                        #Changed to proper naming convetion in game_v2
-                        self.game.Receive_Update(data)
-                    else:
-                        print("Received game update, but no game is assigned.")
-                        
+                    self.game.receive_update(data)
+                    
                 case "Start_Lobby":
                     print(data)
                     game_type = Game_Type[data[0]]
@@ -119,38 +112,40 @@ class Client:
 
                 case "Join_Lobby":
                     #print(f"Received call to join lobby, changing current widget: {data}")
-                    self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Page)
-                    self.gui.Add_Player_Info_Items(data[0])
-                    self.gui.Lobby_Info_Label.setText(data[1])
+                    self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Info_Page)
+                    self.gui.add_lobby_info_item(data[0])
+                    self.gui.set_lobby_info_label(data[1])
 
                 case "Leave_Lobby":
                     #print(f"Received call to leave lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_List_Page)
 
                 case "Update_Lobby":
-                    self.gui.Add_Player_Info_Items(data)
+                    self.gui.add_lobby_info_item(data)
 
                 case "Request_Lobbies":
-                    self.gui.Add_Lobby_Tree_Items(data)
+                    self.gui.add_lobby_tree_item(data)
                 
                 case "Ping":
                     print(f"Received Ping from the server, sending it back: {message}")
                     return_message = {"Ping":data}
-                    self.Send(return_message)
+                    self.send(return_message)
 
                 case "Message":
                     #print(f"Message(s) Received from the Server: ", end="")
                     for message in data:
                         print(message)
 
-                case "Global_Chat_Box":
-                    self.gui.Update_Global_Chat(data)
+                case "Global_Chat_Text_Edit":
+                    self.gui.update_global_chat(data)
 
-                case "Lobby_Chat_Box":
-                    self.gui.Update_Lobby_Chat(data)
+                case "Lobby_Chat_Text_Edit":
+                    self.gui.update_lobby_chat(data)
 
                 case "Disconnect":
-                    self.Disconnect()
+                    for message in data:
+                        print(message)
+                    self.disconnect()
 
                 case _:
                     print(f"Invalid API {message}")

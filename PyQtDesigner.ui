@@ -59,7 +59,11 @@
          </property>
          <layout class="QVBoxLayout" name="Global_Chat_Tab_Layout">
           <item>
-           <widget class="QTextEdit" name="Global_Chat_Text_Edit"/>
+           <widget class="QTextEdit" name="Global_Chat_Text_Edit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -79,7 +83,11 @@
          </property>
          <layout class="QVBoxLayout" name="Lobby_Chat_Tab_Layout">
           <item>
-           <widget class="QTextEdit" name="Lobby_Chat_Text_Edit"/>
+           <widget class="QTextEdit" name="Lobby_Chat_Text_Edit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -99,7 +107,7 @@
      <item row="0" column="0" rowspan="2">
       <widget class="QStackedWidget" name="Stacked_Widget">
        <property name="currentIndex">
-        <number>3</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="Connection_Page">
         <widget class="QWidget" name="verticalLayoutWidget_4">
@@ -221,13 +229,81 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="Update_lobby_List_Button">
+             <widget class="QPushButton" name="Update_Lobby_List_Button">
               <property name="text">
-               <string>Update List</string>
+               <string>Update Lobby List</string>
               </property>
              </widget>
             </item>
            </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="Lobby_Creation_Page">
+        <widget class="QWidget" name="verticalLayoutWidget_7">
+         <property name="geometry">
+          <rect>
+           <x>60</x>
+           <y>49</y>
+           <width>521</width>
+           <height>531</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="Checkers_2_Button">
+            <property name="text">
+             <string>Checkers (2 Players)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="Chess_4_Button">
+            <property name="text">
+             <string>Chess (4 Players)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="Chess_2_Button">
+            <property name="text">
+             <string>Chess (2 Players)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="Exit_Lobby_Creation_Button">
+            <property name="text">
+             <string>Exit</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>

@@ -12,12 +12,14 @@ from Assets.constants import Color
 #Can i even create this without game object? or will it try to update iself right on creation
 class PygameWidget(QWidget):
     def __init__(self, game, parent=None):
+        print("Initializing PygameWidget")
         super().__init__(parent)
         self.game = game
         self.screen = self.game.window
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
-
+        self.start_timer()
+        
     def start_timer(self):
         self.timer.start(16)
 
@@ -28,10 +30,12 @@ class PygameWidget(QWidget):
     #this runs after the widget init, maybe disable it after the widget is no longer usefull.
 
     def update_game(self):
+        print("Updating game")
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_click_pos = event.pos.x(), event.pos.y()
                 mouse_click_pos = self.game.get_mouse_pos(mouse_click_pos)
+                print(mouse_click_pos)
                 if self.game.is_player_turn():
                     self.game.select(mouse_click_pos)
                     self.update()

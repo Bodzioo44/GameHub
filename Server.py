@@ -55,9 +55,7 @@ class Server:
         sock.close()
         print(f"{player.name} has been disconnected from the server.")
         
-        #disconnected player keeps their lobby by default
-        #TODO whenever lobby is deleted after disconnecting a player,
-        #check for other disconnected players in that lobby, and remove them.
+        #TODO This still needs some work.
         if lobby := player.lobby:
             return_dict = lobby.Disconnect_Player(player)
             if return_dict.pop("Remove_Lobby"):
@@ -68,6 +66,7 @@ class Server:
                 del self.lobby_list[lobby.id]
 
             if return_dict.pop("Disconnect_Player"):
+                print(f"Adding {player.name} to disconnected players list")
                 self.disconnected_player_list.update({player.name:player})
             else:
                 for key, value in return_dict.items():
@@ -123,6 +122,7 @@ class Server:
 
                 #data = lobby_id
                 case "Join_Lobby":
+                    data = int(data)
                     if data in self.lobby_list.keys(): #checks if lobby exists
                         lobby = self.lobby_list[data] 
                         for key, value in lobby.Join(current_player).items(): #Lobby actions should return whole dict with message and data
@@ -170,13 +170,13 @@ class Server:
                     return_dict = {"Request_Game_History":current_lobby.Request_Game_History(data)}
                     self.Send(current_sock, return_dict)
 
-                case "Lobby_Chat_Box":
+                case "Lobby_Chat_Text_Edit":
                     if current_lobby := current_player.Get_Lobby():
                         self.Send_Lobby(current_lobby, {api_id:data})
                     else:
                         self.Send(current_sock, {api_id:["Join a Lobby First!"]})
 
-                case "Global_Chat_Box":
+                case "Global_Chat_Text_Edit":
                     self.Send_All({api_id:data})
 
                 case "Message":
@@ -221,7 +221,7 @@ class Server:
                                 else: #if socket was not pinged, ping it and tell client to try again. (in case client doesnt respond to the pign)
                                     self.pinged_conns.append(taken_sock) #adds pinged socket to the list
                                     self.Send(taken_sock, {"Ping":"Connection_Check"}) #sends ping to the client
-                                    message = {"Disconnect":"Name already taken, disconnecting from the server... If you are sure name is available, try again"}
+                                    message = {"Disconnect":["Name already taken, disconnecting from the server... If you are sure name is available, try again"]}
                                     print(f"{addr[0]}:{addr[1]} tried to connect under already taken name, sending disconnect message...")
                                     self.Send(conn, message)
 

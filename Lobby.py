@@ -104,25 +104,31 @@ class Lobby:
             return_dict.update({"Remove_Lobby":True})
         return return_dict
 
-    #does lobby needs to do anything with disconnected player? should sending info about disconnecting be here?
-    #exit lobby whenever its not started? keep the player after the game started?
-    #called by player, what to do whenever player disconnects
+    #this handles ALL disconnects.
+    #1. Removes player in all cases.
+    #2. if there are no players left, removes lobby.
+    #3. checks if lobby was live, if so, adds player to disconnected list and assigns lobby to player
+    #4 
+    #2. Checks if lobby was live.
+    #3 if live, adds player to disconnected list and assigns lobby to player
     def Disconnect_Player(self, player):
         return_dict = {
             "Disconnect_Player":False,
             "Remove_Lobby":False}
         self._Remove_Player(player)
-        self.disconnected_players.append(player)
-        player.lobby = self
-        
+
         if self.players:
-            if self.live:
+            if self.live: #only if there are players left and lobby was live
                 return_dict.update({"Disconnect_Player":True})
-                #self.disconnected_players.append(player)
+                self.disconnected_players.append(player)
+                player.lobby = self
                 
             for p in self.players:
                 return_dict.update({p:{"Message":[f"{player.name} has disconnected."],
                                        "Update_Lobby":self._get_players_info()}})
+                
+                
+        #if the player was last player inside lobby, remove the lobby, and disconnect any other players.
         else:
             return_dict.update({"Remove_Lobby":True})
             
