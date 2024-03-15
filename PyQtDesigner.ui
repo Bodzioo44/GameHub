@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>936</width>
-    <height>744</height>
+    <width>867</width>
+    <height>607</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QWidget" name="gridLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>50</y>
-      <width>821</width>
-      <height>621</height>
+      <x>-10</x>
+      <y>0</y>
+      <width>881</width>
+      <height>611</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0" columnstretch="8,0">
@@ -107,7 +107,7 @@
      <item row="0" column="0" rowspan="2">
       <widget class="QStackedWidget" name="Stacked_Widget">
        <property name="currentIndex">
-        <number>2</number>
+        <number>4</number>
        </property>
        <widget class="QWidget" name="Connection_Page">
         <widget class="QWidget" name="verticalLayoutWidget_4">
@@ -390,28 +390,13 @@
         <widget class="QWidget" name="verticalLayoutWidget_6">
          <property name="geometry">
           <rect>
-           <x>10</x>
-           <y>29</y>
+           <x>50</x>
+           <y>0</y>
            <width>591</width>
            <height>571</height>
           </rect>
          </property>
-         <layout class="QVBoxLayout" name="Game_Page_Layout">
-          <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_2">
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <layout class="QVBoxLayout" name="Game_Page_Layout"/>
         </widget>
        </widget>
       </widget>

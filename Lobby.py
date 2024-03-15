@@ -26,8 +26,9 @@ class Lobby:
         Info = [self.id, pp, self.type.name, self.live]
         return Info
 
-    def _get_lobby_info(self) -> str:
-        return f"ID: {self.id} Type: {self.type.name} Size: {self.size} Live:{self.live}"
+    def _get_lobby_info(self) -> list:
+        return [str(self.id), self.type.name, str(self.size)]
+        #return f"ID: {self.id} Type: {self.type.name} Size: {self.size} Live:{self.live}"
     
     def _get_players_info(self) -> list:
         players_info_dict = []
@@ -124,8 +125,8 @@ class Lobby:
                 player.lobby = self
                 
             for p in self.players:
-                return_dict.update({p:{"Message":[f"{player.name} has disconnected."],
-                                       "Update_Lobby":self._get_players_info()}})
+                return_dict.update({p:{"Message":[f"{player.name} has disconnected."]}})
+                                       #"Update_Lobby":self._get_players_info()}}) #TODO is "Upadte lobby needed here?"
                 
                 
         #if the player was last player inside lobby, remove the lobby, and disconnect any other players.
@@ -141,10 +142,11 @@ class Lobby:
         for p in self.Other_Players(player):
             return_dict.update({p:{"Message":[f"{player.name} has reconnected."]}})
         self._Add_Player(player)
+        self.disconnected_players.remove(player)
         current_time = strftime("%H:%M:%S", localtime())
         return_dict.update({player:{"Message":[f"Reconnected to the lobby {self.id}.", f"Sucesfully reconnected to the server as {player.name} at {current_time}"],
-                                    "Start_Lobby":(self.type.name, p.color.name),
-                                    "Request_Game_History":self.Request_Game_History(0)}})
+                                    "Start_Lobby":(self.type.name, player.color.name),
+                                    "Request_Game_History":self.Request_Game_History(1)}})
         
         return return_dict
     
@@ -181,11 +183,13 @@ class Lobby:
     def Update_Game_History(self, game_update:dict):
         self.turn += 1
         self.game_history.update({self.turn:game_update})
+        print(f"Adding entry to game history: {game_update}")
         
     #TODO this might be better to send in parts, message might get too big for sockets, or pickle it and send it as a whole
     def Request_Game_History(self, turn:int) -> dict:
         #returns turns from input, to the end
-        part_dict = {k: self.game_history[k] for k in list(range(turn, len(self.game_history)))}
+        #print(f"Whole game history: {self.game_history}")
+        part_dict = {k: self.game_history[k] for k in list(range(turn, len(self.game_history)+1))}
         return part_dict
     
     def Kick_Disconnected_Players(self):

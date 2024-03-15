@@ -9,8 +9,7 @@ from numpy import sign
 #TODO delete piece objects after they are removed from the board?
 
 class Board:
-    def __init__(self, board_pixel_size, extra_row = True):
-        self.square_size = board_pixel_size//8
+    def __init__(self, extra_row = True):
         self.board = self.create_board(extra_row)
         
         #for online moves, imo there is no better way to do it
@@ -52,10 +51,10 @@ class Board:
         
         self.board[Prow][Pcol] = "0"
         if row == 0 and piece.color == Color.WHITE and piece.name() == "Peon":
-            self.board[row][col] = Queen(row, col, Color.WHITE, self.square_size)
+            self.board[row][col] = Queen(row, col, Color.WHITE)
             return True
         elif row == 7 and piece.color == Color.BLACK and piece.name() == "Peon":
-            self.board[row][col] = Queen(row, col, Color.BLACK, self.square_size)
+            self.board[row][col] = Queen(row, col, Color.BLACK)
             return True
         else:
             piece.move(row, col)
@@ -205,13 +204,13 @@ class Board:
             for j in range(8):
                 board[i].append('0')
         for i in range(4):
-            board[0][i*2+1] = Peon(0, i*2+1, Color.BLACK, self.square_size)
-            board[1][i*2] = Peon(1, i*2, Color.BLACK, self.square_size)
-            board[7][i*2] = Peon(7, i*2, Color.WHITE, self.square_size)
-            board[6][i*2+1] = Peon(6, i*2+1, Color.WHITE, self.square_size)
+            board[0][i*2+1] = Peon(0, i*2+1, Color.BLACK)
+            board[1][i*2] = Peon(1, i*2, Color.BLACK)
+            board[7][i*2] = Peon(7, i*2, Color.WHITE)
+            board[6][i*2+1] = Peon(6, i*2+1, Color.WHITE)
             if extra_row:
-                board[2][i*2+1] = Peon(2, i*2+1, Color.BLACK, self.square_size)
-                board[5][i*2] = Peon(5, i*2, Color.WHITE, self.square_size)
+                board[2][i*2+1] = Peon(2, i*2+1, Color.BLACK)
+                board[5][i*2] = Peon(5, i*2, Color.WHITE)
         return board
 
     #Checks the status of the square, "0" for free space, False for same color/invalid space, True for enemy color

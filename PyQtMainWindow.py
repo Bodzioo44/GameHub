@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidgetItem, QApplication, QTextEdit, QMainWindow
+from PyQt5.QtCore import Qt
 from PyQtDesigner import Ui_MainWindow
 from PyGameWidget import PygameWidget
 from PyQtListeningThread import ListeningThread
@@ -12,7 +13,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.setupUi(self)
-        self.setCentralWidget(self.gridLayoutWidget)        
+        self.setCentralWidget(self.gridLayoutWidget)
         
         #LAYOUTS SETUP
         self.Global_Chat_Tab.setLayout(self.Global_Chat_Tab_Layout)
@@ -44,38 +45,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #TODO add a way to remember previous name and ip (somekind of logging)
         self.Name_Input_Box.setText("Bodzioo")
+        #self.IP_Input_Box.setText("83.22.217.75")
         self.IP_Input_Box.setText(get_local_ip())
         self.Client = Client(self)
 
-        self.resize(850, 580)
-        self.ratio = 850/580
-        
         self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
+        self.setFixedSize(850, 580)
 
-        #from Checkers.Game import Game
-        #from Assets.constants import Player_Colors
-        #self.start_game_widget(Game(400, self.Client, Player_Colors.WHITE))
-        #self.Stacked_Widget.setCurrentWidget(self.Game_Page)
-        #self.Stacked_Widget.setCurrentIndex(4)
-        #WHAT THE FUCK
-        #0, 1 and 3 is resizing.
-        #2 and 4 are not
-        #YEP, im stupid. kinda obvious now
     """
     PYGAME INEGRATION STUFF
     """
     #TODO ideally create the widget on init, and just change its state when needed
     def start_game_widget(self, game):
         self.Game_Widget = PygameWidget(game, self)
-        self.Game_Widget.start_timer()
+        #self.Game_Widget.start_timer()
         self.Game_Page_Layout.addWidget(self.Game_Widget)
+        print("setting game page from inside start game widget")
         self.Stacked_Widget.setCurrentWidget(self.Game_Page)
 
     def stop_game_widget(self):
         self.Game_Widget.stop_timer()
+        print("setting lobby page from inside stop game widget:")
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
-        
-        
+
     """
     CONNECTION PAGE STUFF
     """
@@ -86,11 +78,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             self.Client.connect(self.Name_Input_Box.text(), self.IP_Input_Box.text()) 
             self.thread = ListeningThread(self.Client)
-            self.thread.signal.connect(self.Client._message_handler)
+            self.thread.signal.connect(self.Client.message_handler)
             self.thread.start()
+            print("setting lobby list page from inside online button")
             self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
         except socket.error as error:
-            self.thread.terminate()
+            #self.thread.stop()
             print(f"Could not connect to the server, check the address and try again. {error}")
        
             
@@ -187,31 +180,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for i, value in enumerate(player_info):
                 item.setText(i, str(value))
             self.Lobby_Info_Tree_Widget.addTopLevelItem(item)
-            
-    #FIXME this receives string instead a list, fix the server side
+
     def set_lobby_info_label(self, data:list):
-        self.Lobby_ID_Label.setText(data[0])
-        self.Lobby_Type_Label.setText(data[1])
-        self.Lobby_Players_Label.setText(data[2])
+        print(f"Data we are setting: {data}")
+        self.Lobby_ID_Label.setText("Lobby ID: " + str(data[0]))
+        self.Lobby_Type_Label.setText("Game Type: "+str(data[1]))
+        self.Lobby_Players_Label.setText("Players: "+str(data[2]))
     
 
     """
     REDEFINING PYQT EVENTS STUFF
     """
-    #TODO this still needs work, probably some changes inside Chat_Tab too.
+    """
+    #TODO Best one that worked so far.
     def resizeEvent(self, event):
-        w = event.size().width()
-        h = int(w / self.ratio)
-        self.resize(w, h)
-        print(f"Resizing to {w}x{h}")
-    
+        newWidth = event.size().width()
+        newHeight = int(newWidth / self.aspectRatio)
+        if newHeight > event.size().height():  # If the calculated height is greater than the current height
+            newHeight = event.size().height()  # Use the current height instead
+            newWidth = int(newHeight * self.aspectRatio)  # And calculate the width based on the aspect ratio
+        self.resize(newWidth, newHeight)
+    """
+
+
     def closeEvent(self, event):
         print("GUI was closed...")
         if self.Client.running:
             self.Client.disconnect()
         print("Disconnected. Goodbye!")
         event.accept()
-        
 
             
 if __name__ == "__main__":

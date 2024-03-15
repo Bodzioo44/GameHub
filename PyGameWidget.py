@@ -19,16 +19,16 @@ class PygameWidget(QWidget):
         
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
-        self.start_timer()
-        
-    def start_timer(self):
         self.timer.start(16)
 
-    def stop_timer(self):
-        self.timer.stop()
-
+        #catch_up_timer = QTimer(self)
+        #catch_up_timer.timeout.connect(self.game_catch_up)
     #Pygame events are uselsess, we are just generating our own events based on PyQt5 events
     #this runs after the widget init, maybe disable it after the widget is no longer usefull.
+    #def game_catch_up(self):
+    #    while data :=
+
+
 
     def update_game(self):
         #print("Updating game")
@@ -36,10 +36,9 @@ class PygameWidget(QWidget):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_click_pos = event.pos.x(), event.pos.y()
                 mouse_click_pos = self.game.get_mouse_pos(mouse_click_pos)
-                print(mouse_click_pos)
+                #print(mouse_click_pos)
                 if self.game.is_player_turn():
                     self.game.select(mouse_click_pos)
-                    self.update()
                 else:
                     print("Not your turn")
 
@@ -69,8 +68,8 @@ class PygameWidget(QWidget):
     #Hijacking the mousePressEvent to generate pygame events
     def mousePressEvent(self, event):
         pygame_event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'button': event.button(), 'pos': event.pos()})
-        width = self.frameGeometry().width()
-        height = self.frameGeometry().height()
+        #width = self.frameGeometry().width()
+        #height = self.frameGeometry().height()
         #print(f"W: {width} H: {height}")
         #print(f"X: {event.x()} Y: {event.y()}")
         pygame.event.post(pygame_event)

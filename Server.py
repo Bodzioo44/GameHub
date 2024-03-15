@@ -59,17 +59,16 @@ class Server:
         if lobby := player.lobby:
             return_dict = lobby.Disconnect_Player(player)
             if return_dict.pop("Remove_Lobby"):
-                print(f"All disconnected players: {self.disconnected_player_list}")
+                #print(f"All disconnected players: {self.disconnected_player_list}")
                 for p in lobby.disconnected_players:
-                    print(f"Disconnected player in empty lobby: {p}")
+                    #print(f"Disconnected player in empty lobby: {p}")
                     del self.disconnected_player_list[p.name]
                 print(f"Removed lobby {lobby.id}")
                 del self.lobby_list[lobby.id]
-
             if return_dict.pop("Disconnect_Player"):
                 print(f"Adding {player.name} to disconnected players list")
                 self.disconnected_player_list.update({player.name:player})
-            else:
+            if return_dict:
                 for key, value in return_dict.items():
                     self.Send(key.sock, value)
 
@@ -259,11 +258,12 @@ class Server:
                                 
             #closing actions
             #TODO message all clients that server is dead before closing?
-            self.sock.close()    
+            #self.sock.close()    
 
         except KeyboardInterrupt:
             print("Keyboard Interrupt")
             self.Running = False
+            self.sock.close()
 
     #just because Windows is retarded, wont matter in the final usecase
     def Terminal_Input_Thread(self):

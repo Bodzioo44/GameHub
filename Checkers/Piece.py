@@ -42,8 +42,8 @@ class Piece:
     
 
 class Peon(Piece):
-    def __init__(self, row, col, color, image_size):
-        super().__init__(row, col, color, image_size)
+    def __init__(self, row, col, color):
+        super().__init__(row, col, color)
         self.weight = 1
 
     def Short_ValidMoves(self, board):
@@ -76,8 +76,8 @@ class Peon(Piece):
                 self.img_path = 'Assets/img/black_pawn.png'
 
 class Queen(Piece):
-    def __init__(self, row, col, color, image_size):
-        super().__init__(row, col, color, image_size)
+    def __init__(self, row, col, color):
+        super().__init__(row, col, color)
         self.weight = 1.5
         
     def Short_ValidMoves(self, board):

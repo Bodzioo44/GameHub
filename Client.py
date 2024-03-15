@@ -1,10 +1,10 @@
-import threading
+from PyQt5.QtWidgets import QApplication
 import socket
-import select
 import json
 
 from Checkers.Game import Game as Checkers_Game
 from Assets.constants import Player_Colors, Game_Type, API, get_local_ip
+from time import sleep
 
 #Only send one message per action, otherwise they mix up and json.loads fails
 class Client:
@@ -37,59 +37,40 @@ class Client:
         if self.running:
             print("Disconnecting from the server...")
             print("Waiting for listening thread to finish...")
-            self.gui.thread.terminate()
-            self.running = False
+            self.gui.thread.stop()
             print("Listening thread finished, closing the socket...")
             self.sock.close()
         self.gui.Stacked_Widget.setCurrentWidget(self.gui.Connection_Page)
         
 
-    #TODO move this to the pyqt5 loop?
-    #yep, prolly the good idea to avoid QObject::setParent: Cannot set parent, new parent is in a different thread
-    #totally yep, try pyqtSingal and WorkerThread
-    def _start_listening(self):
-        while self.running:
-            #print("Listening for messages...")
-            read_sockets, write_sockets, error_sockets = select.select([self.sock], [], [], 2)
-            if read_sockets:
-                try:
-                    message = self._receive()
-                    self._message_handler(message)
-                except socket.error as error:
-                    print(f"BIG SOCKET ERROR DETECTED: {error}")
-                    self.disconnect()
-
     def send(self, message: dict):
         #print(f"Sending this shiet: {message}")
         message = json.dumps(message)
         self.sock.send(message.encode(self.format))
-        
-    def _receive(self) -> dict:
-        #print(self.sock)
-        message = self.sock.recv(self.buff_size).decode(self.format)
-        #print(f"Received this shiet: {message}")
-        if message:
-            message = json.loads(message)
-            return message
-        else:
-            print("Received empty message, disconnecting...")
-            self.disconnect()
-
 
     def start_game(self, type:Game_Type, color:Player_Colors):
         match type:
             case Game_Type.Checkers_2:
                 self.game = Checkers_Game(400, self, color)
-        
         self.gui.start_game_widget(self.game)
 
-
+    def catch_up(self, history:dict):
+        for value in history.values():
+            #print(f"processing: {value}")
+            self.game.receive_update(value, True)
+            sleep(0.5)
+            #FIXME VERY ugly solution imo
+            QApplication.processEvents()
 
     #This edits assigned GUI based on the server response
-    def _message_handler(self, message:dict):
+    #receiveing raw json data from the server
+    def message_handler(self, message:str):
+        message = json.loads(message)
         for api_id, data in message.items():
+            print(f"Proccesing {api_id} with data: {data}")
             match api_id:
                 case "Request_Game_History":
+                    self.catch_up(data)
                     print(f"Received game history from the server: {data}")
 
                 case "Game_Update":
@@ -105,13 +86,11 @@ class Client:
                     self.start_game(game_type, player_color)
 
                 case "Join_Lobby":
-                    #print(f"Received call to join lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Info_Page)
                     self.gui.add_lobby_info_item(data[0])
                     self.gui.set_lobby_info_label(data[1])
 
                 case "Leave_Lobby":
-                    #print(f"Received call to leave lobby, changing current widget: {data}")
                     self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_List_Page)
 
                 case "Update_Lobby":
@@ -139,6 +118,15 @@ class Client:
                 case "Disconnect":
                     for message in data:
                         print(message)
+                    self.disconnect()
+
+                case "Socket_Error":
+                    for message in data:
+                        print(message)
+                    self.disconnect()
+
+                case "Empty_Message":
+                    print("Empty message received.")
                     self.disconnect()
 
                 case _:

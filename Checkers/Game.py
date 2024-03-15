@@ -9,7 +9,7 @@ class Game:
         self.size = size
         self.square_size = size/8
 
-        self.Board = Board(size)
+        self.Board = Board()
         self.Client = Client
 
         self.selected = None
@@ -136,7 +136,7 @@ class Game:
             self.turn = Color.WHITE
 
     #FIXME pop items instead of matching them
-    def receive_update(self, data:dict):
+    def receive_update(self, data:dict, cathing_up = False):
         for key, value in data.items():
             match key:
                 case "Position":
@@ -150,7 +150,14 @@ class Game:
                         self.Board.Remove_by_position(row, col)
                 case _:
                     raise f"Invalid key inside Game_Update, somethinh went really bad!: {key}"
-        self.change_turn()
+        
+        if cathing_up:
+            if self.turn == Color.WHITE:
+                self.turn = Color.BLACK
+            else:
+                self.turn = Color.WHITE
+        else:
+            self.change_turn()
         self._redraw_board()
 
     def send_update(self):
