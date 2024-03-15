@@ -2,6 +2,7 @@ import pygame
 from Assets.constants import Color, Player_Colors
 #from Client import Client
 from Checkers.Board import Board
+from Checkers.Piece import Piece
 
 class Game:
     def __init__(self, size:int, Client, player_color:Player_Colors):
@@ -217,5 +218,5 @@ class Game:
                 if self.Board.board[i][j] != "0":
                     piece = self.Board.board[i][j]
                     #deepcopy cant pickle pygame surfaces
-                    img = pygame.transform.scale(pygame.image.load(piece.img_path), (self.square_size*0.75, self.square_size*0.75))
-                    self.window.blit(img, piece.calc_img_position(self.square_size, self.square_size*0.75))
+                    img = pygame.transform.scale(pygame.image.load(piece.img_path), (self.square_size*Piece.img_scale, self.square_size*Piece.img_scale))
+                    self.window.blit(img, piece.calc_img_position(self.square_size))

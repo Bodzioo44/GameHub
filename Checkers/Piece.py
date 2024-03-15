@@ -1,17 +1,22 @@
 from Assets.constants import Color
 
-#TODO Remove square_size from piece class
+#TODO Remove square_size from piece class, keep img_scale for 
+#TODO add static variable for piece count, for easier winner check and add deconstruction method
+#piece count would have to depend on the piece color.
+
 class Piece:
-    def __init__(self, row, col, color, square_size):
+    img_scale = 0.75
+    def __init__(self, row, col, color):
         self.row = row
         self.col = col
         self.color = color
-        self.img_scale = 0.75
-        #self.square_size = square_size
-        #self.img_size = self.square_size * self.img_scale
         self.AssignColorValues()
+        
+    #def __del__(self):
+    #    print(f"{self} has been removed")
 
-    def calc_img_position(self, square_size, img_size):
+    def calc_img_position(self, square_size):
+        img_size = int(square_size * self.img_scale)
         x = (square_size * self.col) + (square_size - img_size)/2
         y = (square_size * self.row) + (square_size - img_size)/2
         return x, y
