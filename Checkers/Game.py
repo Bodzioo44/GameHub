@@ -1,6 +1,5 @@
 import pygame
 from Assets.constants import Color, Player_Colors
-#from Client import Client
 from Checkers.Board import Board
 from Checkers.Piece import Piece
 
@@ -16,7 +15,7 @@ class Game:
         self.commited = None
         self.turn = Color.WHITE
         self.player_color = player_color
-        self.turn_counter = 0
+        #self.turn_counter = 0
 
         self.running = True
         self.debugg = False
@@ -119,7 +118,7 @@ class Game:
             return False
 
     def change_turn(self):
-        self.turn_counter += 1
+        #sself.turn_counter += 1
         if self.turn == self.player_color:
             if self.selected:
                 self.last_ending_position = self.selected.position()
@@ -164,6 +163,7 @@ class Game:
         removed_pieces = self.Board.Get_Removed_Pieces()
         data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}
         self.Client.send({"Game_Update":data_dict})
+
 
     def get_mouse_pos(self, pos:tuple) -> tuple:
         row, col = pos[1]//self.square_size, pos[0]//self.square_size

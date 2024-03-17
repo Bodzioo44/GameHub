@@ -3,6 +3,7 @@ import socket
 import json
 
 from Checkers.Game import Game as Checkers_Game
+from Chess.Game import Game as Chess_Game
 from Assets.constants import Player_Colors, Game_Type, API, get_local_ip
 from time import sleep
 
@@ -50,6 +51,8 @@ class Client:
 
     def start_game(self, type:Game_Type, color:Player_Colors):
         match type:
+            case Game_Type.Chess_2:
+                self.game = Chess_Game(400, self, color)
             case Game_Type.Checkers_2:
                 self.game = Checkers_Game(400, self, color)
         self.gui.start_game_widget(self.game)
