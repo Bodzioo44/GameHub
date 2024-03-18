@@ -56,16 +56,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     PYGAME INEGRATION STUFF
     """
     #TODO ideally create the widget on init, and just change its state when needed
+    #FIXME even tho widget is being redefined on each reconnect, sometimes it goes crazy (displays 2 boards at once? some surface issues?)
     def start_game_widget(self, game):
+        print("Creating new pygame widget!!")
         self.Game_Widget = PygameWidget(game, self)
         #self.Game_Widget.start_timer()
         self.Game_Page_Layout.addWidget(self.Game_Widget)
-        print("setting game page from inside start game widget")
+        #print("setting game page from inside start game widget")
         self.Stacked_Widget.setCurrentWidget(self.Game_Page)
 
     def stop_game_widget(self):
         self.Game_Widget.stop_timer()
-        print("setting lobby page from inside stop game widget:")
+        #print("setting lobby page from inside stop game widget:")
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
     """

@@ -109,6 +109,8 @@ class Game:
         self._redraw_board()
 
     #TODO! keep removed pieces just for the en passant
+    #FIXME! check for castling, and send double move!
+    #move liast_starting/ending_position inside board! (or check for any special moves inside board? either way is fine)
     def send_update(self):
         removed_pieces = self.Board.Get_Removed_Pieces()
         data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}

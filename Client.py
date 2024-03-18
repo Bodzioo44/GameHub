@@ -42,7 +42,6 @@ class Client:
             print("Listening thread finished, closing the socket...")
             self.sock.close()
         self.gui.Stacked_Widget.setCurrentWidget(self.gui.Connection_Page)
-        
 
     def send(self, message: dict):
         #print(f"Sending this shiet: {message}")
@@ -63,6 +62,7 @@ class Client:
             self.game.receive_update(value, True)
             sleep(0.5)
             #FIXME VERY ugly solution imo
+            #replace with QThread and block moves until its done
             QApplication.processEvents()
 
     #This edits assigned GUI based on the server response

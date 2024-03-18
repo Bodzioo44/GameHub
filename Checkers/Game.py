@@ -159,6 +159,7 @@ class Game:
             self.change_turn()
         self._redraw_board()
 
+    #TODO fix this shiet
     def send_update(self):
         removed_pieces = self.Board.Get_Removed_Pieces()
         data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}

@@ -1,6 +1,7 @@
-from Assets.constants import Color
+from Assets.constants import Player_Colors
 from numpy import sign
 
+#do the both 2 and 4 player versions here? or just 2 player and then inherit from it?
 class Piece:
     img_scale = 0.75
     def __init__(self, row, col, color):
@@ -94,16 +95,16 @@ class Pawn(Piece):
 
     def AssignColorValues(self):
         match self.color:
-            case Color.WHITE:
+            case Player_Colors.WHITE:
                 self.direction = (-1, 0)
                 self.img_path = 'Assets/img/white_pawn.png'
-            case Color.BLACK:
+            case Player_Colors.BLACK:
                 self.direction = (1, 0)
                 self.img_path = 'Assets/img/black_pawn.png'
-            case Color.BLUE:
+            case Player_Colors.BLUE:
                 self.direction = (0, 1)
                 self.img_path = 'Assets/img/blue_pawn.png'
-            case Color.ORANGE:
+            case Player_Colors.ORANGE:
                 self.direction = (0, -1)
                 self.img_path = 'Assets/img/orange_pawn.png'
 
@@ -122,13 +123,13 @@ class Rook(Piece):
 
     def AssignColorValues(self):
         match self.color:
-            case Color.WHITE:
+            case Player_Colors.WHITE:
                 self.img_path = 'Assets/img/white_rook.png'
-            case Color.BLACK:
+            case Player_Colors.BLACK:
                 self.img_path = 'Assets/img/black_rook.png'
-            case Color.BLUE:
+            case Player_Colors.BLUE:
                 self.img_path = 'Assets/img/blue_rook.png'
-            case Color.ORANGE:
+            case Player_Colors.ORANGE:
                 self.img_path = 'Assets/img/orange_rook.png'
 
 class Bishop(Piece):
@@ -138,13 +139,13 @@ class Bishop(Piece):
 
     def AssignColorValues(self):
         match self.color:
-            case Color.WHITE:
+            case Player_Colors.WHITE:
                 self.img_path = 'Assets/img/white_bishop.png'
-            case Color.BLACK:
+            case Player_Colors.BLACK:
                 self.img_path = 'Assets/img/black_bishop.png'
-            case Color.BLUE:
+            case Player_Colors.BLUE:
                 self.img_path = 'Assets/img/blue_bishop.png'
-            case Color.ORANGE:
+            case Player_Colors.ORANGE:
                 self.img_path = 'Assets/img/orange_bishop.png'
         
 class Queen(Piece):
@@ -154,13 +155,13 @@ class Queen(Piece):
         
     def AssignColorValues(self):
         match self.color:
-            case Color.WHITE:
+            case Player_Colors.WHITE:
                 self.img_path = 'Assets/img/white_queen.png'
-            case Color.BLACK:
+            case Player_Colors.BLACK:
                 self.img_path = 'Assets/img/black_queen.png'
-            case Color.BLUE:
+            case Player_Colors.BLUE:
                 self.img_path = 'Assets/img/blue_queen.png'
-            case Color.ORANGE:
+            case Player_Colors.ORANGE:
                 self.img_path = 'Assets/img/orange_queen.png'
         
 class Knight(Piece):
@@ -187,13 +188,13 @@ class Knight(Piece):
     
     def AssignColorValues(self):
         match self.color:
-            case Color.WHITE:
+            case Player_Colors.WHITE:
                 self.img_path = 'Assets/img/white_knight.png'
-            case Color.BLACK:
+            case Player_Colors.BLACK:
                 self.img_path = 'Assets/img/black_knight.png'
-            case Color.BLUE:
+            case Player_Colors.BLUE:
                 self.img_path = 'Assets/img/blue_knight.png'
-            case Color.ORANGE:
+            case Player_Colors.ORANGE:
                 self.img_path = 'Assets/img/orange_knight.png'
                 
 class King(Piece):
@@ -214,81 +215,39 @@ class King(Piece):
             if board.CheckSquare(self.row+pos[0], self.col+pos[1], self.color) in ("0", True):
                 if move := board.check_move_validity(self, (self.row+pos[0], self.col+pos[1])):
                     valid_moves.append(move)
-                    
+
+        #castling
+        if self.first_move:
+            #checks if the squares between the king and right rook are empty
+            if board.CheckSquare(self.row, self.col+1, self.color) == "0" and board.CheckSquare(self.row, self.col+2, self.color) == "0":
+                #checks if right rook exists and has not moved
+                tile = board.Grab_Tile(self.row, 7)
+                if tile and tile.name() == "Rook" and tile.first_move:
+                    #checks if any of the squares between the king and right rook are in check
+                    for i in range(4):
+                        if board.is_square_in_check(self.row, self.col+i, self.color):
+                            break
+                    else:
+                        valid_moves.append((self.row, self.col+3))
+            if board.CheckSquare(self.row, self.col-1, self.color) == "0" and board.CheckSquare(self.row, self.col-2, self.color) == "0" and board.CheckSquare(self.row, self.col-3, self.color) == "0":
+                tile = board.Grab_Tile(self.row, 0)
+                if tile and tile.name() == "Rook" and tile.first_move:
+                    for i in range(5):
+                        if board.is_square_in_check(self.row, self.col-i, self.color):
+                            break
+                    else:
+                        valid_moves.append((self.row, self.col-4))
+
         valid_moves.sort()
         return valid_moves
-    
-    def is_in_check(self, board):
-        #Rook and Queen check
-        for pos in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
-            i = 1
-            while True:
-                match board.CheckSquare(self.row+pos[0]*i, self.col+pos[1]*i, self.color):
-                    case True:
-                        if board.Grab_Tile(self.row+pos[0]*i, self.col+pos[1]*i).name() in ("Rook", "Queen"):
-                            return True
-                        else:
-                            break
-                    case False:
-                        break
-                    case "0":
-                        i += 1
-                        
-        #Bishop and Queen check
-        for pos in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
-            i = 1
-            while True:
-                match board.CheckSquare(self.row+pos[0]*i, self.col+pos[1]*i, self.color):
-                    
-                    case True:
-                        if board.Grab_Tile(self.row+pos[0]*i, self.col+pos[1]*i).name() in ("Bishop", "Queen"):
-                            return True
-                        else:
-                            break
-                    case False:
-                        break
-                    case "0":
-                        i += 1
-        #Knight check
-        for pos in [(2, 1), (1, 2), (-1, 2), (-1, -2), (-2, -1), (1, -2), (2, -1), (-2, 1)]:
-            if board.CheckSquare(self.row+pos[0], self.col+pos[1], self.color) == True:
-                if board.Grab_Tile(self.row+pos[0], self.col+pos[1]).name() == "Knight":
-                    return True
-        #King check
-        for pos in [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)]:
-            if board.CheckSquare(self.row+pos[0], self.col+pos[1], self.color) == True:
-                if board.Grab_Tile(self.row+pos[0], self.col+pos[1]).name() == "King":
-                    return True
-        #Pawn check
-        for pos in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
-            if board.CheckSquare(self.row+pos[0], self.col+pos[1], self.color) == True:
-                if board.Grab_Tile(self.row+pos[0], self.col+pos[1]).name() == "Pawn":
-                    direction = board.Grab_Tile(self.row+pos[0], self.col+pos[1]).direction
-                    #vertical
-                    if direction[0]:
-                        #print("Vertical")
-                        if board.CheckSquare(self.row+direction[0]*-1, self.col+1, self.color) == True:
-                            #print(f"Adding {(self.row+self.direction[0]*-1, self.col+1)} to valid moves")
-                            return True
-                        if board.CheckSquare(self.row+direction[0]*-1, self.col-1, self.color) == True:
-                            #print(f"Adding {(self.row+self.direction[0]*-1, self.col-1)} to valid moves")
-                            return True
-                    #horizontal
-                    else:
-                        #print("Horizontal")
-                        if board.CheckSquare(self.row+1, self.col+direction[1]*-1, self.color) == True:
-                            return True
-                        if board.CheckSquare(self.row-1, self.col+direction[1]*-1, self.color) == True:
-                            return True
 
-                
     def AssignColorValues(self):
         match self.color:
-            case Color.WHITE:
+            case Player_Colors.WHITE:
                 self.img_path = 'Assets/img/white_king.png'
-            case Color.BLACK:
+            case Player_Colors.BLACK:
                 self.img_path = 'Assets/img/black_king.png'
-            case Color.BLUE:
+            case Player_Colors.BLUE:
                 self.img_path = 'Assets/img/blue_king.png'
-            case Color.ORANGE:
+            case Player_Colors.ORANGE:
                 self.img_path = 'Assets/img/orange_king.png'

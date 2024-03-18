@@ -147,7 +147,6 @@ class Lobby:
         return_dict.update({player:{"Message":[f"Reconnected to the lobby {self.id}.", f"Sucesfully reconnected to the server as {player.name} at {current_time}"],
                                     "Start_Lobby":(self.type.name, player.color.name),
                                     "Request_Game_History":self.Request_Game_History(1)}})
-        
         return return_dict
     
     def start(self, player) -> dict:

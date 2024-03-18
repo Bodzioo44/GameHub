@@ -61,7 +61,7 @@ class Server:
             if return_dict.pop("Remove_Lobby"):
                 #print(f"All disconnected players: {self.disconnected_player_list}")
                 for p in lobby.disconnected_players:
-                    #print(f"Disconnected player in empty lobby: {p}")
+                    print(f"Removing {p.name} from disconnected players list")
                     del self.disconnected_player_list[p.name]
                 print(f"Removed lobby {lobby.id}")
                 del self.lobby_list[lobby.id]
@@ -74,27 +74,18 @@ class Server:
 
 
     #assuming that player is inside disconnected list, reconnect it with passed sock
-    #this needs to send 
     def Reconnect(self, name: str, sock: socket.socket):
         player = self.disconnected_player_list[name] #player that we are reconnecting
         player.Reconnect(sock)
-        #current_time = strftime("%H:%M:%S", localtime())
-        #message = {"Message":[f"Sucesfully reconnected to the server as {player.name} at {current_time}"]}
-        #this doesnt work, sending too fast and they merge
-        #self.Send(sock, message)
         del self.disconnected_player_list[name]
         self.player_list.update({sock:player})
         print(f"Reconnected {player.name}")
-        #TODO Above only reconnects player, add lobby reconnect below
-        
+
         lobby = player.lobby
         for key, value in lobby.Reconnect_Player(player).items():
             self.Send(key.sock, value)
         
     #whole API thingymajiggy
-    #If possible lobby methods should return dict with api calls assigned to each player
-    #TODO this need a lot of work, where should the request validity be checked?
-    #I would say everything what can be, should be inside lobby.
     def Message_Handler(self, message, current_sock):
         current_player = self.player_list[current_sock] #Player object we are handling
         current_lobby = current_player.lobby #Lobby object we are handling (None is possible)
@@ -206,7 +197,7 @@ class Server:
                         #handling new connections requests
                         if sock == self.sock:
                             conn, addr = sock.accept() #accepts conneciton
-                            #TODO add "Connect" to message_handler, and move whole connect thingy there?
+                            #TODO add "Connect" to message_handler, and move whole connect/reconnect thingy there?
                             player_tag = self.Receive(conn)["Connect"] #receives name from the client
                             taken_sock = self.Check_Player_Tag_Availability(player_tag) #returns None or socket assigned to that name
 
@@ -233,7 +224,8 @@ class Server:
                                 self.player_list.update({conn:new_player})
                                 current_time = strftime("%H:%M:%S", localtime())
                                 print(f"{addr[0]}:{addr[1]} Connected to the Server as {new_player.name} at: {current_time}")
-                                message = {"Message":[f"Connected to the Server as {new_player.name} at: {current_time}"]}
+                                message = {"Message":[f"Connected to the Server as {new_player.name} at: {current_time}"],
+                                           "Request_Lobbies":self._Generate_Lobby_Data_List()}
                                 self.Send(conn, message)
 
                         #optional for sys.stdin in linux to avoid threading
