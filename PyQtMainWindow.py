@@ -51,6 +51,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
         self.setFixedSize(850, 580)
+        self.setWindowTitle("Game Client")
 
     """
     PYGAME INEGRATION STUFF

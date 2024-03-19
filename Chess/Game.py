@@ -35,7 +35,6 @@ class Game:
                 print("Wrong color selected, pick again")
             else:
                 self.selected = current_square
-                self.last_starting_position = self.selected.position()
                 print(f"Selected {self.selected}")
                 valid_moves = self.selected.ValidMoves(self.Board)
                 if valid_moves:
@@ -68,37 +67,32 @@ class Game:
 
     def change_turn(self):
         #sself.turn_counter += 1
-        if self.turn == self.player_color:
-            if self.selected:
-                self.last_ending_position = self.selected.position()
-            else:
-                raise "Something went really bad, no selected or commited piece after player move"
-            print("Changed turn and sending update")
+        if self.is_player_turn():
+            print("Sending update!:")
             self.send_update()
 
         if self.turn == Color.WHITE:
             self.turn = Color.BLACK
-            #self.player_color = Player_Colors.BLACK
         else:
             self.turn = Color.WHITE
-            #self.player_color = Player_Colors.WHITE
 
-    #TODO pop items instead of matching them
+    #TODO overhaul send/receive update to be board dependend!
     def receive_update(self, data:dict, cathing_up = False):
         for key, value in data.items():
             match key:
-                case "Position":
+                case "Move":
                     row, col = value[0]
                     piece = self.Board.Grab_Tile(row, col)
                     #print(piece)
                     self.Board.Move(piece, value[1])
-                case "Removed":
+                case "Remove":
                     for pos in value:
                         row, col = pos
                         self.Board.Remove_by_position(row, col)
                 case _:
-                    raise f"Invalid key inside Game_Update, somethinh went really bad!: {key}"
-        
+                    raise f"Invalid key inside Game_Update, something went really bad!: {key}"
+        #TODO is this needed?
+        #add optional bool inside change_turn just for catching up
         if cathing_up:
             if self.turn == Color.WHITE:
                 self.turn = Color.BLACK
@@ -112,9 +106,10 @@ class Game:
     #FIXME! check for castling, and send double move!
     #move liast_starting/ending_position inside board! (or check for any special moves inside board? either way is fine)
     def send_update(self):
-        removed_pieces = self.Board.Get_Removed_Pieces()
-        data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}
-        self.Client.send({"Game_Update":data_dict})
+        #removed_pieces = self.Board.Get_Removed_Pieces()
+        #data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}
+        #self.Client.send({"Game_Update":data_dict})
+        pass
 
     def get_mouse_pos(self, pos:tuple) -> tuple:
         row, col = pos[1]//self.square_size, pos[0]//self.square_size
@@ -128,7 +123,7 @@ class Game:
     def rescale_screen(self, new_size:int):
         self.size = new_size
         self.square_size = new_size//8
-        #TODO one of these is probably usesless (doing the same thing twice?)
+        #TODO one of these is probably useless (doing the same thing twice?)
         self.window = pygame.Surface((new_size, new_size))
         self.window = pygame.transform.scale(self.window, (new_size, new_size))
         self._redraw_board()

@@ -3,10 +3,13 @@ from Assets.constants import Player_Colors
 from Chess.Piece import Pawn, Rook, Knight, Bishop, King, Queen
 from copy import deepcopy
 
+#TODO add en passant, castling, promotion
+#TODO save all moves info during move, for easier send_update later 
+
 class Board:
     def __init__(self):
         self.board = self.create_board()
-        self.last_removed_pieces_positions = []
+        self.moves = [] #dict list, [{"Move":(first, second)}, {"Remove": (pos)}]
         
     def SelectPromotion(self, piece):
         #this should pause the game and ask the player what piece they want to promote to,
@@ -27,6 +30,8 @@ class Board:
                 self.board[Prow][Pcol-2] = piece
                 piece.move(Prow, Pcol-2)
                 tile_to_move.move(Prow, Pcol-1)
+                self.moves.append({"Move":((Prow, Pcol), (Prow, Pcol-2))})
+                self.moves.append({"Move":((row, col), (Prow, Pcol-1))})
             else: #short
                 print(f"King before: {piece}, {row, col}")
                 print(f"Rook before: {tile_to_move}, {Prow, Pcol}")
@@ -36,6 +41,11 @@ class Board:
                 self.board[Prow][Pcol+2] = piece
                 piece.move(Prow, Pcol+2)
                 tile_to_move.move(Prow, Pcol+1)
+                self.moves.append({"Move":((Prow, Pcol), (Prow, Pcol+2))})
+                self.moves.append({"Move":((row, col), (Prow, Pcol+1))})
+        #en passant
+        elif 1 == 2:
+            pass
         else:
             self.board[Prow][Pcol] = "0"
             piece.move(row, col)
@@ -47,17 +57,12 @@ class Board:
                     case Player_Colors.BLACK:
                         if row == 7:
                             piece = self.SelectPromotion(piece)
-            #FIXME use this only for en passant
-            #if self.board[row][col] != "0":
-            #    self.last_removed_pieces_positions.append((row, col))
+            self.moves.append({"Move":((Prow, Pcol), (row, col))})
             self.board[row][col] = piece
         
 
-    #for online moves
-    def Get_Removed_Pieces(self):
-        result = self.last_removed_pieces_positions
-        self.last_removed_pieces_positions = []
-        return result
+    def get_moves(self):
+        return self.moves
 
     def Grab_Tile(self, row , col):
         return self.board[row][col]

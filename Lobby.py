@@ -125,10 +125,9 @@ class Lobby:
                 player.lobby = self
                 
             for p in self.players:
-                return_dict.update({p:{"Message":[f"{player.name} has disconnected."]}})
-                                       #"Update_Lobby":self._get_players_info()}}) #TODO is "Upadte lobby needed here?"
-                
-                
+                return_dict.update({p:{"Message":[f"{player.name} has disconnected."],#}})
+                                       "Update_Lobby":self._get_players_info()}})
+
         #if the player was last player inside lobby, remove the lobby, and disconnect any other players.
         else:
             return_dict.update({"Remove_Lobby":True})
