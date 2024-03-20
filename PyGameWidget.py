@@ -1,5 +1,5 @@
 import pygame
-from PyQt5.QtWidgets import QSizePolicy, QWidget
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QMessageBox
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPainter
 
@@ -13,34 +13,64 @@ class PygameWidget(QWidget):
         print("Initializing PygameWidget")
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.game = game
-        
-        self.screen = self.game.window
+        self.Game = game
+        self.Game.debugg = False
+        self.screen = self.Game.window
         
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
         self.timer.start(16)
 
-        #catch_up_timer = QTimer(self)
-        #catch_up_timer.timeout.connect(self.game_catch_up)
-    #Pygame events are uselsess, we are just generating our own events based on PyQt5 events
-    #this runs after the widget init, maybe disable it after the widget is no longer usefull.
-    #def game_catch_up(self):
-    #    while data :=
+        self.catch_up_timer = QTimer(self)
+        self.catch_up_timer.timeout.connect(self.game_catch_up)
+        self.catch_up_data = []
+
+
+    def game_catch_up(self):
+        if self.catch_up_data:
+
+            data = self.catch_up_data.pop(0)
+            print(f"Processing: {data}")
+            self.Game.receive_update(data, True)
+        else:
+            self.catch_up_timer.stop()
+
+    def show_promotion_box(self) -> str:
+        promotionBox = QMessageBox(self)
+        promotionBox.setWindowTitle("Promotion")
+        promotionBox.setText("Select a piece to promote to")
+
+        queenButton = promotionBox.addButton("Queen", QMessageBox.ActionRole)
+        rookButton = promotionBox.addButton("Rook", QMessageBox.ActionRole)
+        bishopButton = promotionBox.addButton("Bishop", QMessageBox.ActionRole)
+        knightButton = promotionBox.addButton("Knight", QMessageBox.ActionRole)
+
+        promotionBox.exec()
+        if promotionBox.clickedButton() == queenButton:
+            return "Queen"
+        elif promotionBox.clickedButton() == rookButton:
+            return "Rook"
+        elif promotionBox.clickedButton() == bishopButton:
+            return "Bishop"
+        elif promotionBox.clickedButton() == knightButton:
+            return "Knight"
+        else:
+            return None
 
 
 
     def update_game(self):
-        #print("Updating game")
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                mouse_click_pos = event.pos.x(), event.pos.y()
-                mouse_click_pos = self.game.get_mouse_pos(mouse_click_pos)
-                #print(mouse_click_pos)
-                if self.game.is_player_turn():
-                    self.game.select(mouse_click_pos)
-                else:
-                    print("Not your turn")
+            if not self.catch_up_timer.isActive():
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mouse_click_pos = event.pos.x(), event.pos.y()
+                    mouse_click_pos = self.Game.get_mouse_pos(mouse_click_pos)
+                    if self.Game.is_player_turn():
+                        self.Game.select(mouse_click_pos)
+                    else:
+                        print("Not your turn")
+            else:
+                print("Wait for game to finish catching up!")
 
         self.update()
 
@@ -56,10 +86,10 @@ class PygameWidget(QWidget):
         #print("Resizing event")
         new_width = event.size().width()
         new_height = event.size().height()
-        self.game.rescale_screen(new_width)
+        self.Game.rescale_screen(new_width)
         #print(f"LALO {self.screen} with size {self.screen.get_size()}")
-        #so self.game.window is not being updated, because for some reason its copied by value not reference?
-        self.screen = self.game.window
+        #so self.Game.window is not being updated, because for some reason its copied by value not reference?
+        self.screen = self.Game.window
         
     def paintEvent(self, event):
         painter = QPainter(self)

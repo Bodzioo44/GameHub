@@ -7,7 +7,7 @@ from PyQtListeningThread import ListeningThread
 import sys
 import socket
 from Client import Client
-from Assets.constants import Game_Type, get_local_ip
+from Assets.constants import Game_Type, get_local_ip, read_local_data, write_local_data
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -42,16 +42,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #MESSAGE INPUT SETUP
         self.Message_Input_Box.returnPressed.connect(self.message_input_action)
 
-
-        #TODO add a way to remember previous name and ip (somekind of logging)
         self.Name_Input_Box.setText("Bodzioo")
-        #self.IP_Input_Box.setText("83.22.217.75")
         self.IP_Input_Box.setText(get_local_ip())
         self.Client = Client(self)
 
         self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
         self.setFixedSize(850, 580)
+        #self.resize(850, 580)
+        #TODO this is good shit, work on proper scaling tho (for the chat too!!)
+        #TODO merge that with resizeEvent?
+        #self.setSizeIncrement(85,58)
         self.setWindowTitle("Game Client")
+
+        #TODO add a way to remember previous name and ip (somekind of logging)
+        for ip in read_local_data():
+            self.IP_ComboBox.addItem(ip)
+            self.IP_ComboBox.setCurrentIndex(0)
+        for name in read_local_data():
+            self.Name_ComboBox.addItem(name)
+            self.Name_ComboBox.setCurrentIndex(0)
 
     """
     PYGAME INEGRATION STUFF
@@ -61,19 +70,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def start_game_widget(self, game):
         print("Creating new pygame widget!!")
         self.Game_Widget = PygameWidget(game, self)
-        #self.Game_Widget.start_timer()
         self.Game_Page_Layout.addWidget(self.Game_Widget)
-        #print("setting game page from inside start game widget")
         self.Stacked_Widget.setCurrentWidget(self.Game_Page)
 
     def stop_game_widget(self):
         self.Game_Widget.stop_timer()
-        #print("setting lobby page from inside stop game widget:")
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
 
     """
     CONNECTION PAGE STUFF
     """
+
     def Offline_Button_Action(self):
         pass
     
@@ -86,10 +93,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print("setting lobby list page from inside online button")
             self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
         except socket.error as error:
-            #self.thread.stop()
             print(f"Could not connect to the server, check the address and try again. {error}")
-       
-            
+
     """
     LOBBY LIST PAGE STUFF
     """
@@ -140,7 +145,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     CHAT TAB WIDGET STUFF
     """
-    #TODO add self.Client check so it doesnt work in offline mode.
     def message_input_action(self):
         message = self.Message_Input_Box.text()
         if self.Client.running:
@@ -151,6 +155,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print("You are not connected to the server.")
             
     #TODO add a nice flash whenever message is received
+    #TODO save chat history and display it on connect?
     def update_global_chat(self, data:str):
         for message in data:
             self.Global_Chat_Text_Edit.append(message)
@@ -168,6 +173,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     TREE WIDGETS AND LABELS STUFF
     """
     #TODO look again into updating the list by single entires, instead of sending the whole list every time
+    #TODO maybe add colors, and display players some other way
     def add_lobby_tree_item(self, data:list):
         self.Lobby_List_Tree_Widget.clear()
         for lobby_info in data:
@@ -185,7 +191,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.Lobby_Info_Tree_Widget.addTopLevelItem(item)
 
     def set_lobby_info_label(self, data:list):
-        print(f"Data we are setting: {data}")
         self.Lobby_ID_Label.setText("Lobby ID: " + str(data[0]))
         self.Lobby_Type_Label.setText("Game Type: "+str(data[1]))
         self.Lobby_Players_Label.setText("Players: "+str(data[2]))
@@ -194,8 +199,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     REDEFINING PYQT EVENTS STUFF
     """
-    """
+
     #TODO Best one that worked so far.
+    #TODO find out what sizeIncrement does inside pyqtdesigner?
+    """
     def resizeEvent(self, event):
         newWidth = event.size().width()
         newHeight = int(newWidth / self.aspectRatio)
@@ -204,7 +211,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             newWidth = int(newHeight * self.aspectRatio)  # And calculate the width based on the aspect ratio
         self.resize(newWidth, newHeight)
     """
-
 
     def closeEvent(self, event):
         print("GUI was closed...")

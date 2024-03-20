@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QApplication
 import socket
 import json
 
@@ -15,7 +14,6 @@ class Client:
 
         self.game = None
         self.gui = gui
-        
         self.running = False
 
     def connect(self, name:str = "Bodzioo", ip:str = get_local_ip(), port:int = 4444):
@@ -31,8 +29,6 @@ class Client:
         self.send({"Connect":self.name})
         print("Starting listening thread...")
         self.running = True
-        #self.listening_thread = threading.Thread(target = self._start_listening)
-        #self.listening_thread.start()
 
     def disconnect(self):
         if self.running:
@@ -57,13 +53,10 @@ class Client:
         self.gui.start_game_widget(self.game)
 
     def catch_up(self, history:dict):
-        for value in history.values():
-            #print(f"processing: {value}")
-            self.game.receive_update(value, True)
-            sleep(0.5)
-            #FIXME VERY ugly solution imo
-            #replace with QThread and block moves until its done
-            QApplication.processEvents()
+        self.gui.Game_Widget.catch_up_data = list(history.values())
+        #TODO modify catchup timer based on move amount
+        self.gui.Game_Widget.catch_up_timer.start(500)
+
 
     #This edits assigned GUI based on the server response
     #receiveing raw json data from the server

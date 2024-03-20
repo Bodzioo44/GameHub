@@ -105,6 +105,7 @@ class Server:
                             game_type = Game_Type[data]
                             new_lobby = Lobby(game_type, lobby_id)
                             self.lobby_list.update({lobby_id:new_lobby})
+                            #TODO change this to new dict format for sending!
                             return_dict = new_lobby.Join(current_player)[current_player]
                         except AttributeError:
                             return_dict = {"Message":["Invalid lobby type"]}

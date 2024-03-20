@@ -19,6 +19,7 @@ class Lobby:
         self.turn = 0
         self.disconnected_players = []
     
+    #TODO add disconnected players to the list 
     def Get_List(self) -> list:
         pp = []
         for player in self.players:

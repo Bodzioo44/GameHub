@@ -60,9 +60,13 @@ class Pawn(Piece):
     def __init__(self, row, col, color):
         super().__init__(row, col, color)  
         self.first_move = True
+        self.right_after_first_move = False
     def move(self, row, col):
+        if self.right_after_first_move:
+            self.right_after_first_move = False
         if self.first_move:
             self.first_move = False
+            self.right_after_first_move = True
         self.row = row
         self.col = col
         
@@ -80,12 +84,31 @@ class Pawn(Piece):
                 valid_moves.append((self.row+self.direction[0], self.col+1))
             if board.CheckSquare(self.row+self.direction[0], self.col-1, self.color) == True:
                 valid_moves.append((self.row+self.direction[0], self.col-1))
-        #horizontal
+        #horizontal for future 4_man chess
         else:
             if board.CheckSquare(self.row+1, self.col+self.direction[1], self.color) == True:
                 valid_moves.append((self.row+1, self.col+self.direction[1]))
             if board.CheckSquare(self.row-1, self.col+self.direction[1], self.color) == True:
                 valid_moves.append((self.row-1, self.col+self.direction[1]))
+
+        #en passant
+        if self.direction[0]: #vertical
+            if board.CheckSquare(self.row, self.col-1, self.color):
+                left_tile = board.Grab_Tile(self.row, self.col-1)
+                if left_tile != "0" and left_tile.name() == "Pawn" and left_tile.color != self.color and left_tile.right_after_first_move:
+                    valid_moves.append((self.row+self.direction[0], self.col-1))
+            if board.CheckSquare(self.row, self.col+1, self.color):
+                right_tile = board.Grab_Tile(self.row, self.col+1)
+                if right_tile != "0" and right_tile.name() == "Pawn" and right_tile.color != self.color and right_tile.right_after_first_move:
+                    valid_moves.append((self.row+self.direction[0], self.col+1))
+        else: #horizontal #FIXME this is broken, try CheckSquare instead?
+            up_tile = board.Grab_Tile(self.row-1, self.col)
+            down_tile = board.Grab_Tile(self.row+1, self.col)
+            if up_tile != "0" and up_tile.name() == "Pawn" and up_tile.color != self.color and up_tile.right_after_first_move:
+                valid_moves.append((self.row-1, self.col+self.direction[1]))
+            if down_tile != "0" and down_tile.name() == "Pawn" and down_tile.color != self.color and down_tile.right_after_first_move:
+                valid_moves.append((self.row+1, self.col+self.direction[1]))
+
         valid_moves.sort()
         new_valid_moves = []
         for move in valid_moves:
@@ -180,10 +203,7 @@ class Knight(Piece):
         new_valid_moves = []
         for move in valid_moves:
             if board.check_move_validity(self, move):
-                
                 new_valid_moves.append(move)
-            else:
-                print(f"Removing {move} from valid moves for said piee")
         return new_valid_moves
     
     def AssignColorValues(self):
@@ -222,7 +242,7 @@ class King(Piece):
             if board.CheckSquare(self.row, self.col+1, self.color) == "0" and board.CheckSquare(self.row, self.col+2, self.color) == "0":
                 #checks if right rook exists and has not moved
                 tile = board.Grab_Tile(self.row, 7)
-                if tile and tile.name() == "Rook" and tile.first_move:
+                if tile != "0" and tile.name() == "Rook" and tile.first_move:
                     #checks if any of the squares between the king and right rook are in check
                     for i in range(4):
                         if board.is_square_in_check(self.row, self.col+i, self.color):
@@ -231,7 +251,7 @@ class King(Piece):
                         valid_moves.append((self.row, self.col+3))
             if board.CheckSquare(self.row, self.col-1, self.color) == "0" and board.CheckSquare(self.row, self.col-2, self.color) == "0" and board.CheckSquare(self.row, self.col-3, self.color) == "0":
                 tile = board.Grab_Tile(self.row, 0)
-                if tile and tile.name() == "Rook" and tile.first_move:
+                if tile != "0" and tile.name() == "Rook" and tile.first_move:
                     for i in range(5):
                         if board.is_square_in_check(self.row, self.col-i, self.color):
                             break

@@ -12,7 +12,7 @@ class Game:
         self.Client = Client
 
         self.selected = None
-        self.turn = Color.WHITE
+        self.turn = Player_Colors.WHITE
         self.player_color = player_color
         #self.turn_counter = 0
         
@@ -51,8 +51,18 @@ class Game:
         elif self.selected:
             valid_moves = self.selected.ValidMoves(self.Board)
             if pos in valid_moves:
+                print("moving stuff")
                 self.Board.Move(self.selected, pos)
                 self._redraw_board()
+                print("checking if piece can be promoted")
+                if pos := self.Board.check_for_promotion():
+                    print(f"piece can be promoted: {pos}")
+                    if piece := self.Client.gui.Game_Widget.show_promotion_box():
+                        print(f"received from popupbox {piece}")
+                        row, col = pos
+                        self.Board.select_promotion(row, col, piece)
+                        self._redraw_board()
+                print("changing turn, (sending update)")
                 self.change_turn()
                 self.selected = None
             else:
@@ -65,53 +75,39 @@ class Game:
         else:
             return False
 
-    def change_turn(self):
-        #sself.turn_counter += 1
-        if self.is_player_turn():
-            print("Sending update!:")
+    #changes turn and sends update after every local player move
+    def change_turn(self, catching_up:bool = False):
+        if not catching_up and self.is_player_turn():
             self.send_update()
-
-        if self.turn == Color.WHITE:
-            self.turn = Color.BLACK
+        if self.turn == Player_Colors.WHITE:
+            self.turn = Player_Colors.BLACK
         else:
-            self.turn = Color.WHITE
+            self.turn = Player_Colors.WHITE
 
-    #TODO overhaul send/receive update to be board dependend!
-    def receive_update(self, data:dict, cathing_up = False):
-        for key, value in data.items():
-            match key:
-                case "Move":
-                    row, col = value[0]
-                    piece = self.Board.Grab_Tile(row, col)
-                    #print(piece)
-                    self.Board.Move(piece, value[1])
-                case "Remove":
-                    for pos in value:
-                        row, col = pos
-                        self.Board.Remove_by_position(row, col)
-                case _:
-                    raise f"Invalid key inside Game_Update, something went really bad!: {key}"
-        #TODO is this needed?
-        #add optional bool inside change_turn just for catching up
-        if cathing_up:
-            if self.turn == Color.WHITE:
-                self.turn = Color.BLACK
-            else:
-                self.turn = Color.WHITE
-        else:
-            self.change_turn()
+    def receive_update(self, data:dict, catching_up:bool = False):
+        for entry in data:
+            for key, value in entry.items():
+                match key:
+                    case "Move":
+                        row, col = value[0]
+                        piece = self.Board.Grab_Tile(row, col)
+                        self.Board.Move(piece, value[1], False)
+                    case "Remove":
+                        row, col = value
+                        self.Board.remove(row, col)
+                    case "Promote":
+                        row, col = value[0]
+                        self.Board.select_promotion(row, col, value[1], False)
+                    case _:
+                        raise f"Invalid key inside Game_Update, something went really bad!: {key}"
+        self.change_turn(catching_up)
         self._redraw_board()
 
-    #TODO! keep removed pieces just for the en passant
-    #FIXME! check for castling, and send double move!
-    #move liast_starting/ending_position inside board! (or check for any special moves inside board? either way is fine)
     def send_update(self):
-        #removed_pieces = self.Board.Get_Removed_Pieces()
-        #data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}
-        #self.Client.send({"Game_Update":data_dict})
-        pass
+        game_data = self.Board.get_moves()
+        self.Client.send({"Game_Update": game_data})
 
-    def get_mouse_pos(self, pos:tuple) -> tuple:
+    def get_mouse_pos(self, pos:tuple[int, int]) -> tuple[int, int]:
         row, col = pos[1]//self.square_size, pos[0]//self.square_size
         return row, col
     
@@ -123,8 +119,6 @@ class Game:
     def rescale_screen(self, new_size:int):
         self.size = new_size
         self.square_size = new_size//8
-        #TODO one of these is probably useless (doing the same thing twice?)
-        self.window = pygame.Surface((new_size, new_size))
         self.window = pygame.transform.scale(self.window, (new_size, new_size))
         self._redraw_board()
 

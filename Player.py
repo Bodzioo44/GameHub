@@ -5,6 +5,7 @@ class Player:
         self.color = None
         #Player keeps lobby even while disconnected
         self.lobby = None
+        self.rating = 0
 
     def __repr__(self):
         return f"<{self.name}, color {self.color} with sock {self.sock}>"

@@ -146,7 +146,7 @@ class Board:
         #for online moves
         self.last_removed_pieces_positions.append((row, col))
      
-     
+    #TODO merge, and and optional argument for online moves 
     #ONLY for removing pieces from online update
     def Remove_by_position(self, row, col):
         self.board[row][col] = "0"

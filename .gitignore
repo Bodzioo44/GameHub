@@ -2,3 +2,5 @@ __pycache__
 test.py
 Convert.sh
 venv
+test.db
+local_data.txt

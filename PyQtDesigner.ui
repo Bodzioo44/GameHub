@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Game Hub</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="gridLayoutWidget">
@@ -107,7 +107,7 @@
      <item row="0" column="0" rowspan="2">
       <widget class="QStackedWidget" name="Stacked_Widget">
        <property name="currentIndex">
-        <number>4</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="Connection_Page">
         <widget class="QWidget" name="verticalLayoutWidget_4">
@@ -144,6 +144,35 @@
            <widget class="QLineEdit" name="IP_Input_Box">
             <property name="placeholderText">
              <string>Enter server ip...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="IP_ComboBox">
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+            <property name="maxVisibleItems">
+             <number>5</number>
+            </property>
+            <property name="placeholderText">
+             <string>Enter server ip...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="Name_ComboBox">
+            <property name="autoFillBackground">
+             <bool>false</bool>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+            <property name="maxVisibleItems">
+             <number>5</number>
+            </property>
+            <property name="placeholderText">
+             <string>Enter your name...</string>
             </property>
            </widget>
           </item>

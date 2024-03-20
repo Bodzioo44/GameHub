@@ -2,7 +2,6 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import select
 import socket
 import json
-from time import sleep
 
 class ListeningThread(QThread):
     signal = pyqtSignal(str)
@@ -27,18 +26,3 @@ class ListeningThread(QThread):
     def stop(self):
         self.Client.running = False
         self.wait()
-
-"""
-class GameCatchUpThread(QThread):
-    signal = pyqtSignal()
-
-    def __init__(self, game, history):
-        super().__init__()
-        self.game = game
-        self.history = history
-
-    def run(self):
-        for key, value in self.history.items():
-            self.game.receive_update(value, True)
-        sleep(0.5)
-"""
