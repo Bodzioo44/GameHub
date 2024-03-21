@@ -55,11 +55,9 @@ class Server:
         sock.close()
         print(f"{player.name} has been disconnected from the server.")
         
-        #TODO This still needs some work.
         if lobby := player.lobby:
             return_dict = lobby.Disconnect_Player(player)
             if return_dict.pop("Remove_Lobby"):
-                #print(f"All disconnected players: {self.disconnected_player_list}")
                 for p in lobby.disconnected_players:
                     print(f"Removing {p.name} from disconnected players list")
                     del self.disconnected_player_list[p.name]
@@ -96,6 +94,7 @@ class Server:
                     self.Send(current_sock, return_dict)
 
                 #TODO if lobby creation is successful, update all other players about it
+                #TODO change this to new dict format for sending!
                 case "Create_Lobby":
                     if current_lobby:
                         return_dict = {"Message":["Cant create a lobby while in another lobby."]}

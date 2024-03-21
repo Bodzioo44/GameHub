@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QTreeWidgetItem, QApplication, QTextEdit, QMainWindow
-from PyQt5.QtCore import Qt
-from PyQtDesigner import Ui_MainWindow
-from PyGameWidget import PygameWidget
-from PyQtListeningThread import ListeningThread
+from PyQt.PyQtDesigner import Ui_MainWindow
+from PyQt.PyGameWidget import PygameWidget
+from PyQt.PyQtListeningThread import ListeningThread
 
 import sys
 import socket
@@ -47,26 +46,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.Client = Client(self)
 
         self.Stacked_Widget.setCurrentWidget(self.Connection_Page)
-        self.setFixedSize(850, 580)
-        #self.resize(850, 580)
+        #self.setFixedSize(850, 580)
+        self.resize(850, 580)
         #TODO this is good shit, work on proper scaling tho (for the chat too!!)
         #TODO merge that with resizeEvent?
         #self.setSizeIncrement(85,58)
         self.setWindowTitle("Game Client")
 
         #TODO add a way to remember previous name and ip (somekind of logging)
-        for ip in read_local_data():
-            self.IP_ComboBox.addItem(ip)
-            self.IP_ComboBox.setCurrentIndex(0)
-        for name in read_local_data():
-            self.Name_ComboBox.addItem(name)
-            self.Name_ComboBox.setCurrentIndex(0)
+        #for ip in read_local_data():
+        #    self.IP_ComboBox.addItem(ip)
+        #    self.IP_ComboBox.setCurrentIndex(0)
+        #for name in read_local_data():
+        #    self.Name_ComboBox.addItem(name)
+        #    self.Name_ComboBox.setCurrentIndex(0)
 
     """
     PYGAME INEGRATION STUFF
     """
     #TODO ideally create the widget on init, and just change its state when needed
     #FIXME even tho widget is being redefined on each reconnect, sometimes it goes crazy (displays 2 boards at once? some surface issues?)
+    #its hard to reproduce
     def start_game_widget(self, game):
         print("Creating new pygame widget!!")
         self.Game_Widget = PygameWidget(game, self)
@@ -200,8 +200,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     REDEFINING PYQT EVENTS STUFF
     """
 
-    #TODO Best one that worked so far.
-    #TODO find out what sizeIncrement does inside pyqtdesigner?
+    #FIXME Best one that worked so far.
     """
     def resizeEvent(self, event):
         newWidth = event.size().width()

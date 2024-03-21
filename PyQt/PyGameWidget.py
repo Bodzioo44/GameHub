@@ -28,7 +28,6 @@ class PygameWidget(QWidget):
 
     def game_catch_up(self):
         if self.catch_up_data:
-
             data = self.catch_up_data.pop(0)
             print(f"Processing: {data}")
             self.Game.receive_update(data, True)
@@ -57,8 +56,6 @@ class PygameWidget(QWidget):
         else:
             return None
 
-
-
     def update_game(self):
         for event in pygame.event.get():
             if not self.catch_up_timer.isActive():
@@ -71,7 +68,7 @@ class PygameWidget(QWidget):
                         print("Not your turn")
             else:
                 print("Wait for game to finish catching up!")
-
+        #repaints the widget on each QTimer tick
         self.update()
 
     #Converts pygame surface to QImage
@@ -79,28 +76,22 @@ class PygameWidget(QWidget):
         image = QImage(self.screen.get_buffer(), self.screen.get_width(), self.screen.get_height(),
                        QImage.Format_RGB32)
         return image
-    
-    #FIXME AttributeError: 'pygame.surface.Surface' object has no attribute 'transform'
-    #somehow make it only rescale on both axis
-    def resizeEvent(self, event):
-        #print("Resizing event")
-        new_width = event.size().width()
-        new_height = event.size().height()
-        self.Game.rescale_screen(new_width)
-        #print(f"LALO {self.screen} with size {self.screen.get_size()}")
-        #so self.Game.window is not being updated, because for some reason its copied by value not reference?
-        self.screen = self.Game.window
-        
+
+    #paints the QImage on the widget
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.drawImage(0, 0, self.get_pygame_surface())
 
+    #makes sure the game widget is rescaled properly (square)
+    def resizeEvent(self, event):
+        new_width = event.size().width()
+        #screen has to be reasigned on each resize, because pygame.Surface is assigned by value, not by reference for some reason?
+        self.screen = self.Game.rescale_screen(new_width)
+        self.resize(new_width, new_width)
+
+
     #Hijacking the mousePressEvent to generate pygame events
     def mousePressEvent(self, event):
         pygame_event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'button': event.button(), 'pos': event.pos()})
-        #width = self.frameGeometry().width()
-        #height = self.frameGeometry().height()
-        #print(f"W: {width} H: {height}")
-        #print(f"X: {event.x()} Y: {event.y()}")
         pygame.event.post(pygame_event)
 

@@ -1,6 +1,5 @@
 from Assets.constants import Color
 
-#TODO Remove square_size from piece class, keep img_scale for 
 #TODO add static variable for piece count, for easier winner check and add deconstruction method
 #piece count would have to depend on the piece color.
 

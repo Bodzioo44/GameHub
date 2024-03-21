@@ -3,18 +3,20 @@ from Assets.constants import Color, Player_Colors
 from Chess.Board import Board
 from Chess.Piece import Piece
 
+
 class Game:
-    def __init__(self, size:int, Client, player_color:Player_Colors):
+    def __init__(self, Gui, Client, size:int, player_color:Player_Colors):
         self.size = size
         self.square_size = size/8
 
         self.Board = Board()
         self.Client = Client
+        self.Gui = Gui
 
         self.selected = None
+        self.valid_moves = []
         self.turn = Player_Colors.WHITE
         self.player_color = player_color
-        #self.turn_counter = 0
         
         self.running = True
         self.debugg = True
@@ -30,34 +32,35 @@ class Game:
     def select(self, pos:tuple):
         row, col = pos
         current_square = self.Board.Grab_Tile(row, col)
+        
         if self.selected == None and current_square != "0":
             if current_square.color != self.turn:
                 print("Wrong color selected, pick again")
             else:
                 self.selected = current_square
                 print(f"Selected {self.selected}")
-                valid_moves = self.selected.ValidMoves(self.Board)
-                if valid_moves:
-                    self._highlight_squares(valid_moves)
-                    print(f"Valid moves: {valid_moves}")
+                self.valid_moves = self.selected.ValidMoves(self.Board)
+                if self.valid_moves:
+                    self._highlight_squares(self.valid_moves)
+                    print(f"Valid moves: {self.valid_moves}")
                 else:
                     print(f"{self.selected} has no valid moves")
                     self.selected = None
+                    
         elif self.selected == current_square:
             print(f"Deselected {self.selected}")
             self._remove_highlight()
             self.selected = None
-        #TODO! Keep valid moves!!!! (optimization thingy, no need to recalculate every time)
+            
         elif self.selected:
-            valid_moves = self.selected.ValidMoves(self.Board)
-            if pos in valid_moves:
+            if pos in self.valid_moves:
                 print("moving stuff")
                 self.Board.Move(self.selected, pos)
                 self._redraw_board()
                 print("checking if piece can be promoted")
                 if pos := self.Board.check_for_promotion():
                     print(f"piece can be promoted: {pos}")
-                    if piece := self.Client.gui.Game_Widget.show_promotion_box():
+                    if piece := self.Gui.Game_Widget.show_promotion_box():
                         print(f"received from popupbox {piece}")
                         row, col = pos
                         self.Board.select_promotion(row, col, piece)
@@ -78,11 +81,27 @@ class Game:
     #changes turn and sends update after every local player move
     def change_turn(self, catching_up:bool = False):
         if not catching_up and self.is_player_turn():
-            self.send_update()
+            if not self.game_over():
+                self.send_update()
+            else:
+                print("Game over!")
+                return
+            
         if self.turn == Player_Colors.WHITE:
             self.turn = Player_Colors.BLACK
         else:
             self.turn = Player_Colors.WHITE
+            
+    def game_over(self):
+        match self.Board.game_end_check(self.player_color):
+            case "Checkmate":
+                print("You lost!")
+            case "Draw":
+                print("Game ended in a draw!")
+            case False:
+                return False
+        #do some game over stuff
+
 
     def receive_update(self, data:dict, catching_up:bool = False):
         for entry in data:
@@ -94,7 +113,7 @@ class Game:
                         self.Board.Move(piece, value[1], False)
                     case "Remove":
                         row, col = value
-                        self.Board.remove(row, col)
+                        self.Board.nuke_tile(row, col)
                     case "Promote":
                         row, col = value[0]
                         self.Board.select_promotion(row, col, value[1], False)
@@ -110,17 +129,19 @@ class Game:
     def get_mouse_pos(self, pos:tuple[int, int]) -> tuple[int, int]:
         row, col = pos[1]//self.square_size, pos[0]//self.square_size
         return row, col
-    
-    
+
+
     """
     PYGAME SURFACE DRAWING STUFF
     """
 
-    def rescale_screen(self, new_size:int):
+    def rescale_screen(self, new_size:int) -> pygame.Surface:
         self.size = new_size
         self.square_size = new_size//8
+        #pygame.transform.scale returns a new surface, so we need to reassign it
         self.window = pygame.transform.scale(self.window, (new_size, new_size))
         self._redraw_board()
+        return self.window
 
     def _remove_highlight(self):
         for row in range(8):

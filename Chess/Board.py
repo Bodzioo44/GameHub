@@ -2,15 +2,49 @@ from Assets.constants import Player_Colors
 from Chess.Piece import Pawn, Rook, Knight, Bishop, King, Queen
 from copy import deepcopy
 
-#TODO add en passant, castling, promotion
-#TODO save all moves info during move, for easier send_update later 
-
 class Board:
     def __init__(self):
         self.board = self.create_board()
-        self.moves = [] #dict list, [{"Move":(first, second)}, {"Remove": (pos)}, {"Promote": (row, col), piece}]
+        self.moves = []
+        self.white_pieces = []
+        self.black_pieces = []
         
-    #FIXME edit last move inside self.moves, or add promotion to actions
+    def add_piece(self, piece):
+        print(f"Adding {piece} to the board")
+        match piece.color:
+            case Player_Colors.WHITE:
+                self.white_pieces.append(piece)
+            case Player_Colors.BLACK:
+                self.black_pieces.append(piece)
+        
+    def nuke_tile(self, row, col):
+        if self.board[row][col] != "0":
+            piece = self.board[row][col]
+            match piece.color:
+                case Player_Colors.WHITE:
+                    self.white_pieces.remove(piece)
+                case Player_Colors.BLACK:
+                    self.black_pieces.remove(piece)
+            print(f"Removing {piece} from the board")
+        self.board[row][col] = "0"
+        
+    def game_end_check(self, color:Player_Colors):
+        match color:
+            case Player_Colors.WHITE:
+                for piece in self.white_pieces:
+                    if piece.ValidMoves(self):
+                        return False
+                if self.check_for_checkmate(color):
+                    return "Checkmate"
+                return "Draw"
+            case Player_Colors.BLACK:
+                for piece in self.black_pieces:
+                    if piece.ValidMoves(self):
+                        return False
+                if self.check_for_checkmate(color):
+                    return "Checkmate"
+                return "Draw"
+
     def select_promotion(self, row, col, piece, save_moves = True):
         match piece:
             case "Queen":
@@ -21,14 +55,13 @@ class Board:
                 new_piece = Bishop(row, col, self.Grab_Tile(row, col).color)
             case "Knight":
                 new_piece = Knight(row, col, self.Grab_Tile(row, col).color)
-
+        self.nuke_tile(row, col)
+        self.add_piece(new_piece)
         self.board[row][col] = new_piece
         if save_moves:
-            print("adding promote to the moves history")
             self.moves.append({"Promote": ((row, col), piece)})
 
     def check_for_promotion(self):
-        print("checking")
         for i in range(8):
             black_tile = self.Grab_Tile(0,i)
             if black_tile != "0" and black_tile.name() == "Pawn" and black_tile.color == Player_Colors.WHITE:
@@ -36,16 +69,14 @@ class Board:
             white_tile = self.Grab_Tile(7,i)
             if white_tile != "0" and white_tile.name() == "Pawn" and white_tile.color == Player_Colors.BLACK:
                 return (7, i)
-        print("check failed")
         return False
 
-    #moves the piece to the new position, and saves the move by default
     def Move(self, piece, pos:tuple[int, int], save_moves = True):
         row, col = pos 
         Prow, Pcol = piece.position()
         tile_to_move = self.Grab_Tile(row, col)
-        #castling, move rook to the king, and place the king right after the rook
-        #vertical!
+
+        #castling
         if piece.name() == "King" and tile_to_move not in ("0", False) and tile_to_move.name() == "Rook" and tile_to_move.first_move:
             if piece.col > tile_to_move.col: #long
                 self.board[row][col] = "0"
@@ -68,25 +99,24 @@ class Board:
                     self.moves.append({"Move":((Prow, Pcol), (Prow, Pcol+2))})
                     self.moves.append({"Move":((row, col), (Prow, Pcol+1))})
         #en passant
-        elif piece.name() == "Pawn" and tile_to_move == "0" and Pcol != col: #vertical
+        elif piece.name() == "Pawn" and tile_to_move == "0" and Pcol != col:
             self.board[Prow][Pcol] = "0"
             self.board[row][col] = piece
-            self.board[Prow][col] = "0"
+            self.nuke_tile(Prow, col)
+            #self.board[Prow][col] = "0"
             piece.move(row, col)
             if save_moves:
                 self.moves.append({"Move":((Prow, Pcol), (row, col))})
                 self.moves.append({"Remove":((Prow, col))})
-
+        #normal move
         else:
             self.board[Prow][Pcol] = "0"
             piece.move(row, col)
+            self.nuke_tile(row, col)
             self.board[row][col] = piece
             if save_moves:
                 self.moves.append({"Move":((Prow, Pcol), (row, col))})
 
-    def remove(self, row, col):
-        self.board[row][col] = "0"
-        
     #returns all the moves that have been made by the player since the last time this function was called
     def get_moves(self):
         temp = self.moves
@@ -117,6 +147,7 @@ class Board:
         if self.is_square_in_check(king.row, king.col, king.color):
             return True
         return False
+    
     
     #checks if square is in check
     def is_square_in_check(self, row, col, color):
@@ -212,6 +243,10 @@ class Board:
         board[0][7] = Rook(0, 7, Player_Colors.BLACK)
         for i in range(8):
            board[1][i] = Pawn(1, i, Player_Colors.BLACK)
+           
+        for i in range(8):
+            self.white_pieces.append(board[1][i])
+            self.white_pieces.append(board[0][i])
 
         board[7][0] = Rook(7, 0, Player_Colors.WHITE)
         board[7][1] = Knight(7, 1, Player_Colors.WHITE)
@@ -224,6 +259,11 @@ class Board:
         board[7][7] = Rook(7, 7, Player_Colors.WHITE)
         for i in range(8):
            board[6][i] = Pawn(6, i, Player_Colors.WHITE)
+           
+        for i in range(8):
+            self.black_pieces.append(board[6][i])
+            self.black_pieces.append(board[7][i])
+            
         return board
    
     def Print_Board(self):

@@ -3,8 +3,7 @@ import json
 
 from Checkers.Game import Game as Checkers_Game
 from Chess.Game import Game as Chess_Game
-from Assets.constants import Player_Colors, Game_Type, API, get_local_ip
-from time import sleep
+from Assets.constants import Player_Colors, Game_Type, API
 
 #Only send one message per action, otherwise they mix up and json.loads fails
 class Client:
@@ -12,11 +11,11 @@ class Client:
         self.format = "utf-8"
         self.buff_size = 4096
 
-        self.game = None
-        self.gui = gui
+        self.Game = None
+        self.Gui = gui
         self.running = False
 
-    def connect(self, name:str = "Bodzioo", ip:str = get_local_ip(), port:int = 4444):
+    def connect(self, name:str, ip:str, port:int = 4444):
         self.ip = ip
         self.port = port
         self.name = name
@@ -34,29 +33,32 @@ class Client:
         if self.running:
             print("Disconnecting from the server...")
             print("Waiting for listening thread to finish...")
-            self.gui.thread.stop()
+            self.Gui.thread.stop()
             print("Listening thread finished, closing the socket...")
             self.sock.close()
-        self.gui.Stacked_Widget.setCurrentWidget(self.gui.Connection_Page)
+        self.Gui.Stacked_Widget.setCurrentWidget(self.Gui.Connection_Page)
 
     def send(self, message: dict):
-        #print(f"Sending this shiet: {message}")
         message = json.dumps(message)
         self.sock.send(message.encode(self.format))
 
     def start_game(self, type:Game_Type, color:Player_Colors):
         match type:
             case Game_Type.Chess_2:
-                self.game = Chess_Game(400, self, color)
+                self.Game = Chess_Game(self.Gui, self, 570, color)
+            case Game_Type.Chess_4:
+                pass
             case Game_Type.Checkers_2:
-                self.game = Checkers_Game(400, self, color)
-        self.gui.start_game_widget(self.game)
+                self.Game = Checkers_Game(self.Gui, self, 570, color)
+        self.Gui.start_game_widget(self.Game)
 
     def catch_up(self, history:dict):
-        self.gui.Game_Widget.catch_up_data = list(history.values())
-        #TODO modify catchup timer based on move amount
-        self.gui.Game_Widget.catch_up_timer.start(500)
-
+        self.Gui.Game_Widget.catch_up_data = list(history.values())
+        if length := len(self.Gui.Game_Widget.catch_up_data):
+            time_per_move = 10//length
+            if time_per_move > 0.5:
+                time_per_move = 0.5
+            self.Gui.Game_Widget.catch_up_timer.start(time_per_move*1000)
 
     #This edits assigned GUI based on the server response
     #receiveing raw json data from the server
@@ -70,8 +72,7 @@ class Client:
                     print(f"Received game history from the server: {data}")
 
                 case "Game_Update":
-                    print("Received game update")
-                    self.game.receive_update(data)
+                    self.Game.receive_update(data)
                     
                 case "Start_Lobby":
                     print(data)
@@ -82,18 +83,18 @@ class Client:
                     self.start_game(game_type, player_color)
 
                 case "Join_Lobby":
-                    self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_Info_Page)
-                    self.gui.add_lobby_info_item(data[0])
-                    self.gui.set_lobby_info_label(data[1])
+                    self.Gui.Stacked_Widget.setCurrentWidget(self.Gui.Lobby_Info_Page)
+                    self.Gui.add_lobby_info_item(data[0])
+                    self.Gui.set_lobby_info_label(data[1])
 
                 case "Leave_Lobby":
-                    self.gui.Stacked_Widget.setCurrentWidget(self.gui.Lobby_List_Page)
+                    self.Gui.Stacked_Widget.setCurrentWidget(self.Gui.Lobby_List_Page)
 
                 case "Update_Lobby":
-                    self.gui.add_lobby_info_item(data)
+                    self.Gui.add_lobby_info_item(data)
 
                 case "Request_Lobbies":
-                    self.gui.add_lobby_tree_item(data)
+                    self.Gui.add_lobby_tree_item(data)
                 
                 case "Ping":
                     print(f"Received Ping from the server, sending it back: {message}")
@@ -106,10 +107,10 @@ class Client:
                         print(message)
 
                 case "Global_Chat_Text_Edit":
-                    self.gui.update_global_chat(data)
+                    self.Gui.update_global_chat(data)
 
                 case "Lobby_Chat_Text_Edit":
-                    self.gui.update_lobby_chat(data)
+                    self.Gui.update_lobby_chat(data)
 
                 case "Disconnect":
                     for message in data:
