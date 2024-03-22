@@ -163,7 +163,7 @@ class Game:
     def send_update(self):
         removed_pieces = self.Board.Get_Removed_Pieces()
         data_dict = {"Position": (self.last_starting_position, self.last_ending_position), "Removed": removed_pieces}
-        self.Client.send({"Game_Update":data_dict})
+        self.Client.send({API.Game_Update:data_dict})
 
 
     def get_mouse_pos(self, pos:tuple) -> tuple:

@@ -88,16 +88,16 @@ class Server:
         current_player = self.player_list[current_sock] #Player object we are handling
         current_lobby = current_player.lobby #Lobby object we are handling (None is possible)
         for api_id, data in message.items():
-            match api_id:
-                case "Request_Lobbies":
-                    return_dict = {"Request_Lobbies":self._Generate_Lobby_Data_List()}
+            match API(api_id):
+                case API.Request_Lobbies:
+                    return_dict = {API.Request_Lobbies:self._Generate_Lobby_Data_List()}
                     self.Send(current_sock, return_dict)
 
                 #TODO if lobby creation is successful, update all other players about it
                 #TODO change this to new dict format for sending!
-                case "Create_Lobby":
+                case API.Create_Lobby:
                     if current_lobby:
-                        return_dict = {"Message":["Cant create a lobby while in another lobby."]}
+                        return_dict = {API.Message:["Cant create a lobby while in another lobby."]}
                     else:
                         lobby_id = self.Get_Lobby_ID()
                         try:
@@ -107,22 +107,22 @@ class Server:
                             #TODO change this to new dict format for sending!
                             return_dict = new_lobby.Join(current_player)[current_player]
                         except AttributeError:
-                            return_dict = {"Message":["Invalid lobby type"]}
+                            return_dict = {API.Message:["Invalid lobby type"]}
 
                     self.Send(current_sock, return_dict)
 
                 #data = lobby_id
-                case "Join_Lobby":
+                case API.Join_Lobby:
                     data = int(data)
                     if data in self.lobby_list.keys(): #checks if lobby exists
                         lobby = self.lobby_list[data] 
                         for key, value in lobby.Join(current_player).items(): #Lobby actions should return whole dict with message and data
                             self.Send(key.sock, value)
                     else:
-                        return_dict = {"Message":["Invalid lobby id"]}
+                        return_dict = {API.Message:["Invalid lobby id"]}
                         self.Send(current_sock, return_dict)
 
-                case "Leave_Lobby":
+                case API.Leave_Lobby:
                     if current_lobby:
                         return_dict = current_lobby.Leave(current_player)
                         if return_dict.pop("Remove_Lobby"):
@@ -135,51 +135,51 @@ class Server:
                         self.Send(current_sock, {"Leave_Lobby":self._Generate_Lobby_Data_List()})
 
                     else:
-                        return_dict = {"Message":["Player not in a lobby"]}
+                        return_dict = {API.Message:["Player not in a lobby"]}
                         self.Send(current_sock, return_dict)
                         
                 #everything below might have outdated variable names
-                case "Start_Lobby":
+                case API.Start_Lobby:
                     if current_lobby:
                         for key, value in current_lobby.start(current_player).items():
                             self.Send(key.sock, value)
                             
                     else:
-                        return_dict = {"Message":["Not inside a lobby"]}
+                        return_dict = {API.Message:["Not inside a lobby"]}
                         self.Send(current_sock, return_dict)
 
-                case "Game_Update":
+                case API.Game_Update:
                     if current_lobby and current_lobby.live:
                         current_lobby.Update_Game_History(data)
                         for key, value in current_lobby.Game_Update(data, current_player).items():
                             self.Send(key.sock, value)
                     else:
-                        return_dict = {"Message":["Join or start a lobby first"]}
+                        return_dict = {API.Message:["Join or start a lobby first"]}
                         self.Send(current_sock, return_dict)
                         
-                case "Request_Game_History":
-                    return_dict = {"Request_Game_History":current_lobby.Request_Game_History(data)}
+                case API.Request_Game_History:
+                    return_dict = {API.Request_Game_History:current_lobby.Request_Game_History(data)}
                     self.Send(current_sock, return_dict)
 
-                case "Lobby_Chat_Text_Edit":
+                case API.Lobby_Chat_Text_Edit:
                     if current_lobby := current_player.Get_Lobby():
                         self.Send_Lobby(current_lobby, {api_id:data})
                     else:
                         self.Send(current_sock, {api_id:["Join a Lobby First!"]})
 
-                case "Global_Chat_Text_Edit":
+                case API.Global_Chat_Text_Edit:
                     self.Send_All({api_id:data})
 
-                case "Message":
+                case API.Message:
                     print(f"Message(s) Received from {current_player.name}: ", end="")
                     for message in data:
                         print(message)
 
-                case "Ping":
+                case API.Ping:
                     self.pinged_conns.remove(current_sock)
                     print(f"{current_player.name} has responded to the ping.")
                     
-                case "Disconnect":
+                case API.Disconnect:
                     self.Disconnect(current_sock)
 
                 case _:
@@ -197,8 +197,8 @@ class Server:
                         #handling new connections requests
                         if sock == self.sock:
                             conn, addr = sock.accept() #accepts conneciton
-                            #TODO add "Connect" to message_handler, and move whole connect/reconnect thingy there?
-                            player_tag = self.Receive(conn)["Connect"] #receives name from the client
+                            #TODO add API.Connect to message_handler, and move whole connect/reconnect thingy there?
+                            player_tag = self.Receive(conn)[API.Connect] #receives name from the client
                             taken_sock = self.Check_Player_Tag_Availability(player_tag) #returns None or socket assigned to that name
 
                             if taken_sock: #actions if name is already taken
@@ -211,8 +211,8 @@ class Server:
                                     
                                 else: #if socket was not pinged, ping it and tell client to try again. (in case client doesnt respond to the pign)
                                     self.pinged_conns.append(taken_sock) #adds pinged socket to the list
-                                    self.Send(taken_sock, {"Ping":"Connection_Check"}) #sends ping to the client
-                                    message = {"Disconnect":["Name already taken, disconnecting from the server... If you are sure name is available, try again"]}
+                                    self.Send(taken_sock, {API.Ping:"Connection_Check"}) #sends ping to the client
+                                    message = {API.Disconnect:["Name already taken, disconnecting from the server... If you are sure name is available, try again"]}
                                     print(f"{addr[0]}:{addr[1]} tried to connect under already taken name, sending disconnect message...")
                                     self.Send(conn, message)
 
@@ -224,8 +224,8 @@ class Server:
                                 self.player_list.update({conn:new_player})
                                 current_time = strftime("%H:%M:%S", localtime())
                                 print(f"{addr[0]}:{addr[1]} Connected to the Server as {new_player.name} at: {current_time}")
-                                message = {"Message":[f"Connected to the Server as {new_player.name} at: {current_time}"],
-                                           "Request_Lobbies":self._Generate_Lobby_Data_List()}
+                                message = {API.Message:[f"Connected to the Server as {new_player.name} at: {current_time}"],
+                                           API.Request_Lobbies:self._Generate_Lobby_Data_List()}
                                 self.Send(conn, message)
 
                         #optional for sys.stdin in linux to avoid threading
@@ -296,7 +296,7 @@ class Server:
 
     #Pings the client
     def Ping(self, conn: socket.socket):
-        message = {"Ping":0}
+        message = {API.Ping:0}
         self.Send(conn, message)
     
     #Receives message from socket and checks if its empty
@@ -306,7 +306,7 @@ class Server:
             message = json.loads(message)
             return message
         else:
-            return {"Disconnect":0}
+            return {API.Disconnect:0}
 
     #Check if player name is already taken (by active player)
     #TODO this might be a bit slow, maybe change it to dict with name as a key?

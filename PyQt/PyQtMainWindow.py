@@ -6,7 +6,7 @@ from PyQt.PyQtListeningThread import ListeningThread
 import sys
 import socket
 from Client import Client
-from Assets.constants import Game_Type, get_local_ip, read_local_data, write_local_data
+from Assets.constants import Game_Type, API, get_local_ip, read_local_data, write_local_data
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -104,12 +104,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def Join_Lobby_Action(self):
         if selected := self.Lobby_List_Tree_Widget.selectedItems():
             print(f"Selected lobby: {selected[0].text(0)}")
-            self.Client.send({"Join_Lobby":selected[0].text(0)})
+            self.Client.send({API.Join_Lobby:selected[0].text(0)})
         else:
             print("No lobby selected.")
             
     def Update_Lobby_List_Action(self):
-        self.Client.send({"Request_Lobbies":None})
+        self.Client.send({API.Request_Lobbies:None})
         
         
     """
@@ -119,11 +119,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def Exit_Lobby_Creation_Action(self):
         self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
     def Chess_2_Action(self):
-        self.Client.send({"Create_Lobby":Game_Type.Chess_2.name})
+        self.Client.send({API.Create_Lobby:Game_Type.Chess_2.name})
     def Chess_4_Action(self):
-        self.Client.send({"Create_Lobby":Game_Type.Chess_4.name})
+        self.Client.send({API.Create_Lobby:Game_Type.Chess_4.name})
     def Checkers_2_Action(self):
-        self.Client.send({"Create_Lobby":Game_Type.Checkers_2.name})
+        self.Client.send({API.Create_Lobby:Game_Type.Checkers_2.name})
     
     """
     LOBBY INFO PAGE STUFF    
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.Client.send({"Leave_Lobby":None})
         
     def Start_Lobby_Action(self):
-        self.Client.send({"Start_Lobby":None})
+        self.Client.send({API.Start_Lobby:None})
     
     def Kick_Player_Action(self):
         if selected := self.Lobby_Info_Tree_Widget.selectedItems():

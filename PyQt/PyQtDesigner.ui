@@ -59,7 +59,7 @@
          </property>
          <layout class="QVBoxLayout" name="Global_Chat_Tab_Layout">
           <item>
-           <widget class="QTextEdit" name="Global_Chat_Text_Edit">
+           <widget class="QTextEdit" name=API.Global_Chat_Text_Edit>
             <property name="readOnly">
              <bool>true</bool>
             </property>
@@ -83,7 +83,7 @@
          </property>
          <layout class="QVBoxLayout" name="Lobby_Chat_Tab_Layout">
           <item>
-           <widget class="QTextEdit" name="Lobby_Chat_Text_Edit">
+           <widget class="QTextEdit" name=API.Lobby_Chat_Text_Edit>
             <property name="readOnly">
              <bool>true</bool>
             </property>

@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 import socket
 import sys
 import os
@@ -83,25 +83,29 @@ class Game_Type(tuple, Enum):
 #in a future far far away....
 
 
-
-class API(Enum):
-    Create_Lobby = "Create_Lobby"
-    Join_Lobby = "Join_Lobby"
-    Leave_Lobby = "Leave_Lobby"
-    Start_Lobby = "Start_Lobby"
+class API(int, Enum):
+    Create_Lobby = auto() #Server receives
+    Join_Lobby = auto() #Client receives, Server receives
+    Leave_Lobby = auto() #Client receives, Server receives
+    Start_Lobby = auto() #Server receives
+    Update_Lobby = auto() #Client receives
     
-    Game_Update = "Game_Update"
+    Game_Update = auto() #Client receives, Server receives
     
-    Request_Lobbies = "Request_Lobbies"
-    Request_Game_History = "Request_Game_History"
+    Request_Lobbies = auto() #Client receives
+    Request_Game_History = auto() #Client receives, Server receives
 
-    Message = "Message"
-    Global_Chat_Box = "Global_Chat_Box"
-    Lobby_Chat_Box = "Lobby_Chat_Box"
+    Message = auto() #Client receives, Server receives??????
+    Global_Chat_Text_Edit = auto() #Client receives, Server receives
+    Lobby_Chat_Text_Edit = auto() #Client receives, Server receives
 
-    Ping = "Ping"
-    Disconnect = "Disconnect"
-    Connect = "Connect"
+    Ping = auto() #Client receives, Server receives
+    Disconnect = auto() #Client receives, Server receives
+    Connect = auto() #Move to message handler?
+
+    Socket_Error = auto() #Client receives
+    Empty_Message = auto() #Client receives
+
     
 
     

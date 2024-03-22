@@ -124,7 +124,7 @@ class Game:
 
     def send_update(self):
         game_data = self.Board.get_moves()
-        self.Client.send({"Game_Update": game_data})
+        self.Client.send({API.Game_Update: game_data})
 
     def get_mouse_pos(self, pos:tuple[int, int]) -> tuple[int, int]:
         row, col = pos[1]//self.square_size, pos[0]//self.square_size

@@ -25,7 +25,7 @@ class Client:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(5)
         self.sock.connect(self.addr)
-        self.send({"Connect":self.name})
+        self.send({API.Connect:self.name})
         print("Starting listening thread...")
         self.running = True
 
@@ -66,15 +66,15 @@ class Client:
         message = json.loads(message)
         for api_id, data in message.items():
             print(f"Proccesing {api_id} with data: {data}")
-            match api_id:
-                case "Request_Game_History":
+            match API(api_id):
+                case API.Request_Game_History:
                     self.catch_up(data)
                     print(f"Received game history from the server: {data}")
 
-                case "Game_Update":
+                case API.Game_Update:
                     self.Game.receive_update(data)
                     
-                case "Start_Lobby":
+                case API.Start_Lobby:
                     print(data)
                     game_type = Game_Type[data[0]]
                     print(game_type)
@@ -82,47 +82,47 @@ class Client:
                     print(player_color)
                     self.start_game(game_type, player_color)
 
-                case "Join_Lobby":
+                case API.Join_Lobby:
                     self.Gui.Stacked_Widget.setCurrentWidget(self.Gui.Lobby_Info_Page)
                     self.Gui.add_lobby_info_item(data[0])
                     self.Gui.set_lobby_info_label(data[1])
 
-                case "Leave_Lobby":
+                case API.Leave_Lobby:
                     self.Gui.Stacked_Widget.setCurrentWidget(self.Gui.Lobby_List_Page)
 
-                case "Update_Lobby":
+                case API.Update_Lobby:
                     self.Gui.add_lobby_info_item(data)
 
-                case "Request_Lobbies":
+                case API.Request_Lobbies:
                     self.Gui.add_lobby_tree_item(data)
                 
-                case "Ping":
+                case API.Ping:
                     print(f"Received Ping from the server, sending it back: {message}")
-                    return_message = {"Ping":data}
+                    return_message = {API.Ping:data}
                     self.send(return_message)
 
-                case "Message":
+                case API.Message:
                     #print(f"Message(s) Received from the Server: ", end="")
                     for message in data:
                         print(message)
 
-                case "Global_Chat_Text_Edit":
+                case API.Global_Chat_Text_Edit:
                     self.Gui.update_global_chat(data)
 
-                case "Lobby_Chat_Text_Edit":
+                case API.Lobby_Chat_Text_Edit:
                     self.Gui.update_lobby_chat(data)
 
-                case "Disconnect":
+                case API.Disconnect:
                     for message in data:
                         print(message)
                     self.disconnect()
 
-                case "Socket_Error":
+                case API.Socket_Error:
                     for message in data:
                         print(message)
                     self.disconnect()
 
-                case "Empty_Message":
+                case API.Empty_Message:
                     print("Empty message received.")
                     self.disconnect()
 

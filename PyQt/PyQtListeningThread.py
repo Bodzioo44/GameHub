@@ -17,9 +17,9 @@ class ListeningThread(QThread):
                 try:
                     message = self.Client.sock.recv(self.Client.buff_size).decode(self.Client.format)
                     if not message:
-                        message = json.dumps({"Empty_Message":None})
+                        message = json.dumps({API.Empty_Message:None})
                 except socket.error as error:
-                    message = json.dumps({"Socket_Error":[error]})
+                    message = json.dumps({API.Socket_Error:[error]})
                 finally:
                     self.signal.emit(message)
 
