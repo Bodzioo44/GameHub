@@ -90,7 +90,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.thread = ListeningThread(self.Client)
             self.thread.signal.connect(self.Client.message_handler)
             self.thread.start()
-            print("setting lobby list page from inside online button")
             self.Stacked_Widget.setCurrentWidget(self.Lobby_List_Page)
         except socket.error as error:
             print(f"Could not connect to the server, check the address and try again. {error}")

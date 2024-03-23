@@ -63,10 +63,12 @@ class Client:
     #This edits assigned GUI based on the server response
     #receiveing raw json data from the server
     def message_handler(self, message:str):
+        print(message)
         message = json.loads(message)
+
         for api_id, data in message.items():
             print(f"Proccesing {api_id} with data: {data}")
-            match API(api_id):
+            match API(int(api_id)):
                 case API.Request_Game_History:
                     self.catch_up(data)
                     print(f"Received game history from the server: {data}")
