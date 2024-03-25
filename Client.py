@@ -58,7 +58,7 @@ class Client:
             time_per_move = 10//length
             if time_per_move > 0.5:
                 time_per_move = 0.5
-            self.Gui.Game_Widget.catch_up_timer.start(time_per_move*1000)
+            self.Gui.Game_Widget.catch_up_timer.start(int(time_per_move*1000))
 
     #This edits assigned GUI based on the server response
     #receiveing raw json data from the server

@@ -4,10 +4,10 @@ from copy import deepcopy
 
 class Board:
     def __init__(self):
-        self.board = self.create_board()
         self.moves = []
         self.white_pieces = []
         self.black_pieces = []
+        self.board = self.create_board()
         
     def add_piece(self, piece):
         print(f"Adding {piece} to the board")
@@ -20,11 +20,13 @@ class Board:
     def nuke_tile(self, row, col):
         if self.board[row][col] != "0":
             piece = self.board[row][col]
+            print(piece)
+            print(self.white_pieces)
             match piece.color:
                 case Player_Colors.WHITE:
-                    self.white_pieces.remove(piece)
-                case Player_Colors.BLACK:
                     self.black_pieces.remove(piece)
+                case Player_Colors.BLACK:
+                    self.white_pieces.remove(piece)
             print(f"Removing {piece} from the board")
         self.board[row][col] = "0"
         
