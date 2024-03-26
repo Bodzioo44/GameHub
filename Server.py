@@ -84,10 +84,9 @@ class Server:
             self.Send(key.sock, value)
         
     #whole API thingymajiggy
-    def Message_Handler(self, message, current_sock, optional = None):
-        if not optional:
-            current_player = self.player_list[current_sock] #Player object we are handling
-            current_lobby = current_player.lobby #Lobby object we are handling (None is possible)
+    def Message_Handler(self, message, current_sock):
+        current_player = self.player_list[current_sock] #Player object we are handling
+        current_lobby = current_player.lobby #Lobby object we are handling (None is possible)
         #print("WAWOOWOWOWOWW", message)
         for api_id, data in message.items():
             match API(int(api_id)):
@@ -184,34 +183,6 @@ class Server:
                 case API.Disconnect:
                     self.Disconnect(current_sock)
 
-                case API.Connect:
-                    player_tag = data
-                    if taken_sock := self.Check_Player_Tag_Availability(player_tag):
-                        if current_sock in self.pinged_conns:
-                            self.Disconnect(taken_sock)
-                            self.Reconnect(player_tag, current_sock)
-                        else:
-                            self.pinged_conns.append(taken_sock)
-                            self.Send(taken_sock, {API.Ping:"Connection_Check"})
-                            message = {API.Disconnect:["Name already taken, disconnecting from the server... If you are sure name is available, try again"]}
-                            #print(f"{optional[0]}:{optional[1]} tried to connect under already taken name, sending disconnect message...")
-                            self.Send(current_sock, message)
-
-                    elif player_tag in self.disconnected_player_list.keys():
-                        self.Reconnect(player_tag, current_sock)
-
-                    else:
-                        current_player = Player(player_tag, current_sock)
-                        self.player_list.update({current_sock:current_player})
-                        current_time = strftime("%H:%M:%S", localtime())
-                        print(f"{optional[0]}:{optional[1]} Connected to the Server as {current_player.name} at: {current_time}")
-                        message = {API.Message:[f"Connected to the Server as {current_player.name} at: {current_time}"],
-                                    API.Request_Lobbies:self._Generate_Lobby_Data_List()}
-                        self.Send(current_sock, message)
-                        
-                    
-
-
                 case _:
                     print(f"Invalid API id!: {api_id}")
 
@@ -228,13 +199,13 @@ class Server:
                         if sock == self.sock:
                             conn, addr = sock.accept() #accepts conneciton
                             #TODO add API.Connect to message_handler, and move whole connect/reconnect thingy there?
-                            self.Message_Handler({API.Connect:0}, conn, addr)
+                            #self.Message_Handler({API.Connect:0}, conn, addr)
                             #FIXME double API.Connect, from server itself and client
                             #Keep it here after all with extra Receive??
-                            """
+
                             x = self.Receive(conn)
                             print(x)
-                            player_tag = x[API.Connect] #receives name from the client
+                            player_tag = x[API.Connect.value] #receives name from the client
                             print(player_tag)
                             taken_sock = self.Check_Player_Tag_Availability(player_tag) #returns None or socket assigned to that name
 
@@ -264,7 +235,6 @@ class Server:
                                 message = {API.Message:[f"Connected to the Server as {new_player.name} at: {current_time}"],
                                            API.Request_Lobbies:self._Generate_Lobby_Data_List()}
                                 self.Send(conn, message)
-                            """
 
                         #optional for sys.stdin in linux to avoid threading
                         #TODO somehow move this line to the bottom of the terminal feed (visual quality improvement)
